@@ -7,6 +7,7 @@ plugins {
   alias(libs.plugins.roborazzi)
   alias(libs.plugins.secrets)
   alias(libs.plugins.google.services)
+  id("org.jetbrains.kotlin.plugin.compose") version "2.1.0"
 }
 
 android {
@@ -54,9 +55,7 @@ android {
     compose = true
     buildConfig = true
   }
-  composeOptions {
-    kotlinCompilerExtensionVersion = "1.5.3"
-  }
+
   testOptions { unitTests { isIncludeAndroidResources = true } }
 }
 
