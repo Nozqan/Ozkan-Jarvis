@@ -17,7 +17,7 @@ import androidx.compose.material.icons.filled.Memory
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Vibration
-import androidx.compose.material.icons.filled.VolumeUp
+import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -203,7 +203,7 @@ fun SettingsScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                                Icon(imageVector = Icons.Default.VolumeUp, contentDescription = null, tint = NeonYellow)
+                                Icon(imageVector = Icons.AutoMirrored.Filled.VolumeUp, contentDescription = null, tint = NeonYellow)
                                 Text(text = "Medya Ses Seviyesi", color = TextWhite, fontSize = 14.sp)
                             }
                             Text(text = "%${volumeLevel.toInt()}", color = MatrixGreen, fontWeight = FontWeight.Bold, fontSize = 14.sp)

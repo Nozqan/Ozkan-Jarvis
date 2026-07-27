@@ -1,19 +1,24 @@
 package com.example.features.bluetooth
 
 import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothManager
 import android.content.Context
 import android.content.Intent
 import android.provider.Settings
 
 class BluetoothFeature(private val context: Context) {
 
+    private val bluetoothAdapter: BluetoothAdapter? by lazy {
+        val bluetoothManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+        bluetoothManager.adapter
+    }
+
     fun isBluetoothSupported(): Boolean {
-        return BluetoothAdapter.getDefaultAdapter() != null
+        return bluetoothAdapter != null
     }
 
     fun isBluetoothEnabled(): Boolean {
-        val adapter = BluetoothAdapter.getDefaultAdapter()
-        return adapter?.isEnabled == true
+        return bluetoothAdapter?.isEnabled == true
     }
 
     fun openBluetoothSettings() {

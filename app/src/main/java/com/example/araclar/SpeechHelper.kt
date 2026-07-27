@@ -200,7 +200,7 @@ class SpeechHelper(
 
     override fun onInit(status: Int) {
         if (status == TextToSpeech.SUCCESS) {
-            val result = textToSpeech?.setLanguage(Locale("tr", "TR"))
+            val result = textToSpeech?.setLanguage(Locale.forLanguageTag("tr-TR"))
             if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
                 Log.e("SpeechHelper", "Turkish TTS not supported")
             }
