@@ -1,0 +1,7 @@
+{
+  "name": "AKREP JARVIS",
+  "description": "AKREP JARVIS - Omnipotent Offline & Online AI Assistant for Nebi Özkan",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
