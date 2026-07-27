@@ -13,7 +13,7 @@ import org.json.JSONObject
 import com.example.BuildConfig
 
 class GeminiAiClient(
-    private var geminiApiKey: String = BuildConfig.GEMINI_API_KEY.ifBlank { "" },
+    private var geminiApiKey: String = BuildConfig.GEMINI_API_KEY.ifBlank { "BURAYA GEMINI API KEY EKLE" },
     private var openAiApiKey: String = ""
 ) {
     private val client = OkHttpClient()
