@@ -49,6 +49,7 @@ export function AyarlarEkrani() {
   const [testte, setTestte] = useState(false);
   const [silOnay, setSilOnay] = useState<string | null>(null);
   const [siliniyor, setSiliniyor] = useState(false);
+  const [ttsOrnek, setTtsOrnek] = useState("Merhaba Nebi, ben AKREP JARVIS. Sizi dinliyorum.");
 
   const aktifSaglayici = a.saglayici;
   const anahtarVar = aktifSaglayici === "openai" ? openaiVar : aktifSaglayici === "gemini" ? geminiVar : false;
@@ -86,7 +87,7 @@ export function AyarlarEkrani() {
   const sesiDene = () => {
     if (!TurkceMetinSeslendirici.destekleniyor()) return setHata({ kod: "tts_yok", mesaj: "Bu tarayıcı sesli yanıtı desteklemiyor.", oneri: "Chrome veya Edge deneyin; yanıtlar ekranda metin olarak görünmeye devam eder.", tekrarDenenebilir: false });
     const t = new TurkceMetinSeslendirici();
-    void t.konus("Merhaba Nebi, ben AKREP JARVIS. Sizi dinliyorum.", { hiz: a.sesHizi, ton: a.sesTonu }, { bitti: () => t.yokEt() });
+    void t.konus(ttsOrnek.trim() || "AKREP JARVIS hazır.", { hiz: a.sesHizi, ton: a.sesTonu }, { bitti: () => t.yokEt() });
   };
 
   const veriSil = async (ne: string) => {
@@ -164,7 +165,11 @@ export function AyarlarEkrani() {
         <Anahtar acik={a.tamAcilis} degisti={(v) => ayarGuncelle({ tamAcilis: v })} etiket="Her açılışta tam animasyon" aciklama="Kapalıyken ilk açılıştan sonra daha kısa animasyon kullanılır." />
         <Kaydirici etiket="Konuşma hızı" deger={a.sesHizi} min={0.7} max={1.4} adim={0.05} degisti={(v) => ayarGuncelle({ sesHizi: v })} />
         <Kaydirici etiket="Ses tonu" deger={a.sesTonu} min={0.6} max={1.5} adim={0.05} degisti={(v) => ayarGuncelle({ sesTonu: v })} />
-        <div className="px-3 py-2"><button className="dugme" onClick={sesiDene}>🔊 Sesi dene</button></div>
+        <label className="block px-3 py-2">
+          <span className="text-sm">Ses önizleme metni</span>
+          <input className="alan mt-1" value={ttsOrnek} onChange={(e) => setTtsOrnek(e.target.value)} />
+        </label>
+        <div className="px-3 py-2"><button className="dugme" onClick={sesiDene}>🔊 Bu metni dinle</button></div>
       </Bolum>
 
       <Bolum baslik="Görünüm ve performans">
