@@ -119,7 +119,7 @@ function Uygulama() {
               <button className="dugme min-h-9 shrink-0 px-3 py-1 text-xs" onClick={() => setUyari(null)}>Tamam</button>
             </div>
           )}
-          <main className="h-[calc(100dvh-0px)] overflow-hidden">
+          <main className="h-[100dvh] overflow-hidden overscroll-contain">
             <HataSinirlayici ad="Bu ekran" key={ekran}>
               {ekran === "hud" && <AnaHudEkrani vm={vm} gezin={gezin} />}
               {ekran === "kamera" && <KameraEkrani />}

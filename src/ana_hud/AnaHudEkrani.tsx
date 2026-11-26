@@ -1,5 +1,5 @@
 // Ana HUD: ortada Güneş çekirdeği, köşelerde sistem göstergeleri, altta sesli/yazılı komut paneli.
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { GunesHud, HUD_ETIKETLERI } from "@/gunes_hud/GunesHud";
 import { AgKarti, BataryaKarti, DepolamaKarti, DurumKarti } from "@/sistem_izleyici/SistemPaneli";
 import { useSistemIzleme } from "@/sistem_izleyici/SistemIzleyici";
@@ -28,17 +28,12 @@ export function AnaHudEkrani({ vm, gezin }: Props) {
   const sistem = useSistemIzleme();
   const [giris, setGiris] = useState("");
   const [saat, setSaat] = useState(() => Date.now());
-  const sonRef = useRef<HTMLDivElement>(null);
   const meşgul = vm.hudDurumu === "dusunuyor";
 
   useEffect(() => {
     const z = setInterval(() => setSaat(Date.now()), 1000);
     return () => clearInterval(z);
   }, []);
-
-  useEffect(() => {
-    sonRef.current?.scrollTo({ top: sonRef.current.scrollHeight, behavior: "smooth" });
-  }, [vm.mesajlar.length]);
 
   const gonder = (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -52,7 +47,7 @@ export function AnaHudEkrani({ vm, gezin }: Props) {
   const sesHatasi = vm.hata && /konusma|mikrofon|dil_/.test(vm.hata.kod);
 
   return (
-    <div className="hud-screen mx-auto h-[100dvh] max-w-6xl overflow-hidden px-3 pt-[max(3.5rem,env(safe-area-inset-top))] pb-[calc(5.5rem+env(safe-area-inset-bottom))] sm:px-6">
+    <div className="hud-screen mx-auto flex h-[100dvh] max-w-6xl flex-col overflow-hidden px-3 pt-[max(3.5rem,env(safe-area-inset-top))] pb-[calc(5.5rem+env(safe-area-inset-bottom))] sm:px-6">
       <header className="hud-header mb-3 flex flex-wrap items-center justify-between gap-2">
         <div className="min-w-0">
           <h1 className="altin-yazi text-xl font-extrabold tracking-[0.12em] sm:text-2xl">AKREP JARVIS</h1>
@@ -63,7 +58,7 @@ export function AnaHudEkrani({ vm, gezin }: Props) {
         </div>
       </header>
 
-      <div className="hud-durum-grid grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)_minmax(0,1fr)] lg:grid-rows-2">
+      <div className="hud-durum-grid grid min-h-0 flex-1 grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)_minmax(0,1fr)] lg:grid-rows-2">
         <BataryaKarti d={sistem} className="hud-card order-1 lg:order-none lg:col-start-1 lg:row-start-1" />
         <AgKarti d={sistem} className="hud-card order-2 lg:order-none lg:col-start-3 lg:row-start-1" />
 
@@ -156,7 +151,7 @@ export function AnaHudEkrani({ vm, gezin }: Props) {
         {vm.mesajlar.length > 0 && (
           <details className="hud-history mt-3">
             <summary className="text-metin2 inline-block cursor-pointer rounded-full px-3 py-1 text-xs hover:text-gunes">Konuşma geçmişi ({vm.mesajlar.length})</summary>
-            <div ref={sonRef} className="mt-2 max-h-64 space-y-2 overflow-y-auto pr-1">
+            <div className="mt-2 max-h-64 space-y-2 overflow-hidden pr-1">
               {vm.mesajlar.map((m) => (
                 <div key={m.id} className={`flex ${m.rol === "kullanici" ? "justify-end" : "justify-start"}`}>
                   <div
