@@ -9,6 +9,7 @@ import type { GezinmeHedefi } from "@/gezinme/GezinmeTipleri";
 import type { HudDurumu } from "@/veri/model/tipler";
 import { AkanMetin } from "./AkanMetin";
 import type { AnaHudViewModel } from "./AnaHudViewModel";
+import { useAyarlar } from "@/veri/depo/AyarDeposu";
 
 const DURUM_RENK: Record<HudDurumu, string> = {
   hazir: "#FFC928",
@@ -26,8 +27,11 @@ interface Props {
 
 export function AnaHudEkrani({ vm, gezin }: Props) {
   const sistem = useSistemIzleme();
+  const ayar = useAyarlar();
   const [giris, setGiris] = useState("");
   const [saat, setSaat] = useState(() => Date.now());
+  const [havaMetni, setHavaMetni] = useState("Konum yok");
+  const [havaYukleniyor, setHavaYukleniyor] = useState(false);
   const [komutZinciriCalisiyor, setKomutZinciriCalisiyor] = useState(false);
   const panikTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const meşgul = vm.hudDurumu === "dusunuyor";
@@ -39,6 +43,43 @@ export function AnaHudEkrani({ vm, gezin }: Props) {
       if (panikTimer.current) clearTimeout(panikTimer.current);
     };
   }, []);
+
+  const konumHavasiniTazele = () => {
+    if (!ayar.hariciVeriIzni) {
+      setHavaMetni("Konum izni kapalı");
+      return;
+    }
+    if (!navigator.onLine) {
+      setHavaMetni("Çevrimdışı");
+      return;
+    }
+    if (!navigator.geolocation) {
+      setHavaMetni("Konum desteklenmiyor");
+      return;
+    }
+    setHavaYukleniyor(true);
+    navigator.geolocation.getCurrentPosition(
+      async ({ coords }) => {
+        try {
+          const url = `https://api.open-meteo.com/v1/forecast?latitude=${coords.latitude}&longitude=${coords.longitude}&current=temperature_2m,weather_code&timezone=auto`;
+          const yanit = await fetch(url);
+          if (!yanit.ok) throw new Error("hava_alinamadi");
+          const veri = await yanit.json();
+          const derece = Math.round(veri.current?.temperature_2m ?? 0);
+          setHavaMetni(`${derece}°C · Konumda`);
+        } catch {
+          setHavaMetni("Hava alınamadı");
+        } finally {
+          setHavaYukleniyor(false);
+        }
+      },
+      () => {
+        setHavaMetni("Konum reddedildi");
+        setHavaYukleniyor(false);
+      },
+      { enableHighAccuracy: false, timeout: 8000, maximumAge: 15 * 60 * 1000 },
+    );
+  };
 
   const gonder = (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -85,8 +126,13 @@ export function AnaHudEkrani({ vm, gezin }: Props) {
           <h1 className="altin-yazi text-xl font-extrabold tracking-[0.12em] sm:text-2xl">AKREP JARVIS</h1>
           <p className="text-metin2 text-xs">Geliştirici: Nebi Özkan</p>
         </div>
-        <div className="cam cam-oval px-3 py-1.5 text-xs font-medium tabular-nums">
-          {new Date(saat).toLocaleDateString("tr-TR", { day: "numeric", month: "short" })} · {saatMetni(saat)}
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <button type="button" className="cam cam-oval px-3 py-1.5 text-xs font-medium" onClick={konumHavasiniTazele} disabled={havaYukleniyor} aria-label="Konum ve hava durumunu yenile">
+            {havaYukleniyor ? "Hava alınıyor…" : `☁️ ${havaMetni}`}
+          </button>
+          <div className="cam cam-oval px-3 py-1.5 text-xs font-medium tabular-nums">
+            {new Date(saat).toLocaleDateString("tr-TR", { day: "numeric", month: "short" })} · {saatMetni(saat)}
+          </div>
         </div>
       </header>
 

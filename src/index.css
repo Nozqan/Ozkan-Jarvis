@@ -326,3 +326,18 @@ select.alan option {
 @media (prefers-reduced-motion: reduce) {
   .anim-nabiz, .anim-yanip { animation: none; }
 }
+
+.buyuk-yazi {
+  font-size: 112%;
+}
+.buyuk-yazi .dugme {
+  min-height: 48px;
+}
+.yuksek-kontrast {
+  --color-metin: #ffffff;
+  --color-metin2: #d8deea;
+}
+.yuksek-kontrast .cam,
+.yuksek-kontrast .cam-ince {
+  border-color: rgba(255, 227, 106, 0.68);
+}

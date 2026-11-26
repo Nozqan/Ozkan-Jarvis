@@ -21,6 +21,8 @@ export const VARSAYILAN_AYARLAR: Ayarlar = {
   kullanimProfili: "dengeli",
   vurguRengi: "gunes",
   ozellikRehberiGorulduMu: false,
+  buyukYazi: false,
+  yuksekKontrast: false,
 };
 
 export const ayarDeposu = kaliciDepo<Ayarlar>("akrep.ayarlar", VARSAYILAN_AYARLAR);

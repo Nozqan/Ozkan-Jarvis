@@ -43,6 +43,40 @@ export function KameraEkrani() {
   const izinPaneli = vm.durum === "izin_bekleniyor" && vm.hata?.kod === "kamera_izin_yok";
   const desteklenmiyor = !KameraYoneticisi.destekleniyor();
   const sonKart = vm.kartlar[0];
+  const nfcTara = async () => {
+    const NDEFReaderCtor = (window as unknown as {
+      NDEFReader?: new () => {
+        scan: () => Promise<void>;
+        addEventListener: (tur: "reading", dinleyici: (event: {
+          serialNumber?: string;
+          message: { records: { recordType: string; data?: ArrayBuffer }[] };
+        }) => void) => void;
+      };
+    }).NDEFReader;
+    if (!NDEFReaderCtor) {
+      setNfcDurumu("Bu tarayıcıda NFC tarama desteklenmiyor");
+      return;
+    }
+    try {
+      const okuma = new NDEFReaderCtor();
+      okuma.addEventListener("reading", ({ message }) => {
+        for (const kayit of message.records) {
+          const metin = kayit.data ? new TextDecoder().decode(kayit.data) : "";
+          setNfcDurumu(metin ? `NFC etiketi: ${metin}` : "NFC etiketi okundu");
+          const komut = metin.toLocaleLowerCase("tr").trim();
+          if (komut.includes("metin")) void vm.metinOku();
+          else if (komut.includes("nesne")) void vm.nesneTani();
+          else if (komut.includes("barkod") || komut.includes("qr")) void vm.kodTani();
+          else if (komut.includes("ortam")) void vm.ortamAnaliz();
+          else if (komut.includes("çevir") || komut.includes("cevir")) vm.cevir();
+        }
+      });
+      await okuma.scan();
+      setNfcDurumu("NFC etiketi bekleniyor");
+    } catch (e) {
+      setNfcDurumu(e instanceof DOMException && e.name === "NotAllowedError" ? "NFC izni reddedildi" : "NFC taraması başlatılamadı");
+    }
+  };
   const kopyala = async (id: string, metin: string) => {
     setKopyalamaHatasi(null);
     try {
@@ -196,7 +230,10 @@ export function KameraEkrani() {
           <HataKutusu hata={vm.hata} tekrarDene={() => (acik ? undefined : void vm.ac())} kapat={vm.hatayiKapat} />
         </div>
       )}
-      <p className="text-metin2 mt-2 text-center text-[0.68rem]" role="status">📡 {nfcDurumu}</p>
+      <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
+        <button type="button" className="dugme min-h-9 px-3 py-1 text-xs" onClick={() => void nfcTara()}>📡 NFC taramayı başlat</button>
+        <p className="text-metin2 text-[0.68rem]" role="status">{nfcDurumu}</p>
+      </div>
 
       {/* Sonuç kartları */}
       <section className="camera-results mt-5 min-h-0 flex-1 overflow-hidden" aria-label="Tarama sonuçları">

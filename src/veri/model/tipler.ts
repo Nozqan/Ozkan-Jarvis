@@ -34,6 +34,8 @@ export interface Ayarlar {
   kullanimProfili: "tasarruf" | "dengeli" | "performans";
   vurguRengi: "gunes" | "yesil" | "mavi";
   ozellikRehberiGorulduMu: boolean;
+  buyukYazi: boolean;
+  yuksekKontrast: boolean;
 }
 
 export interface Not {

@@ -47,11 +47,13 @@ function Uygulama() {
     const k = document.documentElement.classList;
     k.toggle("dusuk-performans", perf.seviye === "dusuk");
     k.toggle("hareket-azalt", perf.hareketAzalt);
+    k.toggle("buyuk-yazi", ayar.buyukYazi);
+    k.toggle("yuksek-kontrast", ayar.yuksekKontrast);
     document.documentElement.style.setProperty(
       "--tema-vurgu",
       ayar.vurguRengi === "yesil" ? "#54E38E" : ayar.vurguRengi === "mavi" ? "#67C7FF" : "#FFC928",
     );
-  }, [perf.seviye, perf.hareketAzalt, ayar.vurguRengi]);
+  }, [perf.seviye, perf.hareketAzalt, ayar.vurguRengi, ayar.buyukYazi, ayar.yuksekKontrast]);
 
   // Yapay zekâ bağlantı durumu (monitörde görünür)
   useEffect(() => {

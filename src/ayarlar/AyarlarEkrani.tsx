@@ -19,7 +19,8 @@ import { YedeklemePaneli } from "./YedeklemePaneli";
 const OPENAI_MODELLERI = ["gpt-4o-mini", "gpt-4o", "gpt-4.1-mini", "gpt-4.1"];
 const GEMINI_MODELLERI = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.5-pro", "gemini-2.0-flash"];
 
-function Bolum({ baslik, children }: { baslik: string; children: React.ReactNode }) {
+function Bolum({ baslik, aktif = true, children }: { baslik: string; aktif?: boolean; children: React.ReactNode }) {
+  if (!aktif) return null;
   return (
     <section className="cam p-3 sm:p-5" aria-label={baslik}>
       <h2 className="altin-yazi mb-2 px-2 text-lg font-bold">{baslik}</h2>
@@ -133,6 +134,10 @@ export function AyarlarEkrani() {
 
   const modeller = aktifSaglayici === "gemini" ? GEMINI_MODELLERI : OPENAI_MODELLERI;
   const testRenk = !test ? "#A9B3C7" : test.kod === "bagli" || test.kod === "yerel" ? "#54E38E" : test.kod === "kota" ? "#FFB547" : "#FF5E6C";
+  const ayarEslesiyor = (metin: string) => {
+    const aranan = ayarArama.toLocaleLowerCase("tr").trim();
+    return !aranan || metin.toLocaleLowerCase("tr").includes(aranan);
+  };
 
   return (
     <div className="mx-auto h-[100dvh] max-w-3xl space-y-4 overflow-y-auto overscroll-contain px-3 pt-[max(3.5rem,env(safe-area-inset-top))] pb-[calc(5.5rem+env(safe-area-inset-bottom))] sm:px-6">
@@ -158,7 +163,7 @@ export function AyarlarEkrani() {
         </div>
       )}
 
-      <Bolum baslik="Ses ve iletişim">
+      <Bolum baslik="Ses ve iletişim" aktif={ayarEslesiyor("Ses iletişim konuşma sesli uyandırma hız tonu")}>
         <Anahtar acik={a.sesliYanit} degisti={(v) => ayarGuncelle({ sesliYanit: v })} etiket="Sesli yanıt" aciklama="Kapalıyken yanıtlar yalnızca ekranda akan metin olarak gösterilir." />
         <Anahtar acik={a.uyandirmaKelimesi} degisti={(v) => ayarGuncelle({ uyandirmaKelimesi: v })} etiket="Uyandırma kelimesi (“Jarvis” / “Akrep”)" aciklama="Açıkken dinleme sırasında yalnızca bu kelimelerle başlayan konuşmalar komut sayılır." />
         <p className="text-metin2 px-3 py-1 text-xs">Çevrimdışıyken tarayıcınız yerel konuşma tanımayı ve Türkçe dil paketini destekliyorsa sesli komutlar cihazda işlenir; desteklemiyorsa komutu metin kutusuna yazabilirsiniz.</p>
@@ -172,7 +177,7 @@ export function AyarlarEkrani() {
         <div className="px-3 py-2"><button className="dugme" onClick={sesiDene}>🔊 Bu metni dinle</button></div>
       </Bolum>
 
-      <Bolum baslik="Görünüm ve performans">
+      <Bolum baslik="Görünüm ve performans" aktif={ayarEslesiyor("Görünüm performans tema profil hareket büyük yazı yüksek kontrast renk")}>
         <label className="block px-3 py-2">
           <span className="text-sm">Kullanım profili</span>
           <select
@@ -200,6 +205,8 @@ export function AyarlarEkrani() {
           </select>
         </label>
         <Anahtar acik={a.hareketAzalt} degisti={(v) => ayarGuncelle({ hareketAzalt: v })} etiket="Animasyonları azalt" aciklama="Güneş HUD ve arayüz animasyonlarını azaltır. Cihazın erişilebilirlik tercihi de dikkate alınır." />
+        <Anahtar acik={a.buyukYazi} degisti={(v) => ayarGuncelle({ buyukYazi: v })} etiket="Büyük yazı" aciklama="Uygulama metinlerini ve düğmeleri daha büyük, okunur boyutta gösterir." />
+        <Anahtar acik={a.yuksekKontrast} degisti={(v) => ayarGuncelle({ yuksekKontrast: v })} etiket="Yüksek kontrast" aciklama="Metin ve cam sınırlarını daha belirgin hale getirir." />
         <label className="block px-3 py-2">
           <span className="text-sm">Tema vurgu rengi</span>
           <select className="alan mt-1" value={a.vurguRengi} onChange={(e) => ayarGuncelle({ vurguRengi: e.target.value as typeof a.vurguRengi })}>
@@ -224,7 +231,7 @@ export function AyarlarEkrani() {
         </div>
       </Bolum>
 
-      <Bolum baslik="Yapay zekâ sağlayıcısı">
+      <Bolum baslik="Yapay zekâ sağlayıcısı" aktif={ayarEslesiyor("Yapay zekâ sağlayıcı OpenAI Gemini API anahtar model uç nokta")}>
         <label className="block px-3 py-2">
           <span className="text-sm">Sağlayıcı</span>
           <select
@@ -314,7 +321,7 @@ export function AyarlarEkrani() {
         )}
       </Bolum>
 
-      <Bolum baslik="Veriler">
+      <Bolum baslik="Veriler" aktif={ayarEslesiyor("Veri gizlilik sohbet not arşiv hatırlatıcı sil")}>
         <Anahtar acik={a.sohbetGecmisiniSakla} degisti={(v) => ayarGuncelle({ sohbetGecmisiniSakla: v })} etiket="Sohbet geçmişini cihazda sakla" aciklama="Kapalıyken konuşmalar kalıcı kaydedilmez." />
         <div className="flex flex-wrap gap-2 px-3 py-2">
           {[
@@ -333,7 +340,7 @@ export function AyarlarEkrani() {
         <p className="text-metin2 px-3 text-xs">“Tüm verileri sil” ayarları ve kayıtlı API anahtarlarını da siler. Ayrı ayrı silme seçenekleri yalnızca seçilen veriyi etkiler.</p>
       </Bolum>
 
-      <Bolum baslik="Yedekleme ve geri yükleme">
+      <Bolum baslik="Yedekleme ve geri yükleme" aktif={ayarEslesiyor("Yedekleme geri yükleme dışa aktarma içe aktar parola")}>
         <YedeklemePaneli />
       </Bolum>
 

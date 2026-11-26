@@ -126,6 +126,17 @@ export function HatirlaticilarPaneli() {
     setSuruklenenId(null);
   };
 
+  const tasimaGit = (id: string, yon: -1 | 1) => {
+    hatirlaticiDeposu.ata((onceki) => {
+      const indeks = onceki.findIndex((h) => h.id === id);
+      const hedef = indeks + yon;
+      if (indeks < 0 || hedef < 0 || hedef >= onceki.length) return onceki;
+      const sonraki = [...onceki];
+      [sonraki[indeks], sonraki[hedef]] = [sonraki[hedef], sonraki[indeks]];
+      return sonraki;
+    });
+  };
+
   return (
     <div className="space-y-3">
       <div className="cam p-3 sm:p-4">
@@ -227,7 +238,11 @@ export function HatirlaticilarPaneli() {
                 <p className="text-sm font-medium break-words">{h.metin}</p>
                 <p className="text-metin2 text-xs">{tarihSaat(h.zaman)} · {kalanMetin(h.zaman - Date.now())}</p>
               </div>
-              <button className="dugme dugme-kirmizi min-h-9 shrink-0 px-3 py-1 text-xs" onClick={() => void sil(h.id)}>İptal</button>
+              <div className="flex shrink-0 items-center gap-1">
+                <button className="dugme min-h-9 px-2 py-1 text-xs" onClick={() => tasimaGit(h.id, -1)} aria-label="Hatırlatıcıyı yukarı taşı">↑</button>
+                <button className="dugme min-h-9 px-2 py-1 text-xs" onClick={() => tasimaGit(h.id, 1)} aria-label="Hatırlatıcıyı aşağı taşı">↓</button>
+                <button className="dugme dugme-kirmizi min-h-9 px-3 py-1 text-xs" onClick={() => void sil(h.id)}>İptal</button>
+              </div>
             </li>
           ))}
         </ul>
