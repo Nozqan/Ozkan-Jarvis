@@ -68,6 +68,20 @@ export function GizlilikEkrani() {
     <div className="mx-auto h-[calc(100dvh-4.5rem)] max-w-3xl space-y-4 overflow-y-auto px-3 pt-14 pb-28 sm:px-6">
       <h1 className="altin-yazi text-xl font-extrabold sm:text-2xl">Gizlilik</h1>
       <p className="text-metin2 text-sm">AKREP JARVIS verilerinizi nasıl kullanır? Aşağıda kamera, mikrofon, veri işleme ve yapay zekâ ile ilgili her şey açıkça anlatılmıştır.</p>
+      <section className="cam grid gap-2 p-4 sm:grid-cols-3" aria-label="Gizlilik durumu">
+        <div className="cam-ince p-3">
+          <p className="text-enerji-yesil text-sm font-bold">Yerel veri</p>
+          <p className="text-metin2 mt-1 text-xs">Notlar, ayarlar ve arşiv bu cihazda tutulur.</p>
+        </div>
+        <div className="cam-ince p-3">
+          <p className="text-uyari text-sm font-bold">Açık izinler</p>
+          <p className="text-metin2 mt-1 text-xs">Mikrofon/kamera yalnızca ilgili ekrandan açılır.</p>
+        </div>
+        <div className="cam-ince p-3">
+          <p className="text-bilgi text-sm font-bold">Harici trafik</p>
+          <p className="text-metin2 mt-1 text-xs">Varsayılan olarak kapalı ve açıkça denetlenebilir.</p>
+        </div>
+      </section>
       {BOLUMLER.map((b) => (
         <details key={b.baslik} className="cam px-4 py-3 sm:px-5">
           <summary className="cursor-pointer list-none text-base font-bold">

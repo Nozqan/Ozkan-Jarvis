@@ -17,7 +17,7 @@ import { AktiflikGostergesi } from "@/ortak/bilesenler/AktiflikGostergesi";
 import { UzayArkaplani } from "@/ortak/bilesenler/UzayArkaplani";
 import { HataSinirlayici } from "@/ortak/hata/HataSinirlayici";
 import { cihazDurumuBildir } from "@/sistem_izleyici/CihazDurumu";
-import { useAyarlar } from "@/veri/depo/AyarDeposu";
+import { ayarGuncelle, useAyarlar } from "@/veri/depo/AyarDeposu";
 import type { Hatirlatici } from "@/veri/model/tipler";
 import { yapayZekaDurumuHesapla } from "@/yapay_zeka/YapayZekaDurumu";
 import { AkrepSystem, androidCapinda } from "@/yerel_android/AkrepNative";
@@ -121,6 +121,24 @@ function Uygulama() {
                 {uyari.h.metin}
               </p>
               <button className="dugme min-h-9 shrink-0 px-3 py-1 text-xs" onClick={() => setUyari(null)}>Tamam</button>
+            </div>
+          )}
+          {!vm.cevrimici && (
+            <div role="status" className="cam-ince fixed top-[max(1rem,env(safe-area-inset-top))] left-1/2 z-40 -translate-x-1/2 px-3 py-1 text-xs text-uyari">
+              Çevrimdışı · yerel komut modu
+            </div>
+          )}
+          {!ayar.ozellikRehberiGorulduMu && (
+            <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/40 p-4 pb-24 sm:items-center sm:pb-4" role="dialog" aria-modal="true" aria-labelledby="ozellik-rehber-baslik">
+              <div className="cam max-w-sm p-5">
+                <p id="ozellik-rehber-baslik" className="altin-yazi text-lg font-bold">AKREP JARVIS kısa rehber</p>
+                <ul className="text-metin2 mt-3 space-y-2 text-sm">
+                  <li>• Ana ekranda hızlı komutları ve çevrimdışı durumunu görün.</li>
+                  <li>• Kamera ekranında ızgara, odak ve tarama sonuçları kullanılabilir.</li>
+                  <li>• Ayarlar bölümünden profil, tema ve TTS önizlemesini kişiselleştirin.</li>
+                </ul>
+                <button className="dugme dugme-altin mt-4 w-full" onClick={() => ayarGuncelle({ ozellikRehberiGorulduMu: true })}>Rehberi tamamla</button>
+              </div>
             </div>
           )}
           <main className="h-[100dvh] overflow-hidden overscroll-contain">
