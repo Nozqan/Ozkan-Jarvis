@@ -1,5 +1,5 @@
 // Ana HUD: ortada Güneş çekirdeği, köşelerde sistem göstergeleri, altta sesli/yazılı komut paneli.
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { GunesHud, HUD_ETIKETLERI } from "@/gunes_hud/GunesHud";
 import { AgKarti, BataryaKarti, DepolamaKarti, DurumKarti } from "@/sistem_izleyici/SistemPaneli";
 import { useSistemIzleme } from "@/sistem_izleyici/SistemIzleyici";
@@ -28,11 +28,16 @@ export function AnaHudEkrani({ vm, gezin }: Props) {
   const sistem = useSistemIzleme();
   const [giris, setGiris] = useState("");
   const [saat, setSaat] = useState(() => Date.now());
+  const [komutZinciriCalisiyor, setKomutZinciriCalisiyor] = useState(false);
+  const panikTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const meşgul = vm.hudDurumu === "dusunuyor";
 
   useEffect(() => {
     const z = setInterval(() => setSaat(Date.now()), 1000);
-    return () => clearInterval(z);
+    return () => {
+      clearInterval(z);
+      if (panikTimer.current) clearTimeout(panikTimer.current);
+    };
   }, []);
 
   const gonder = (e?: React.FormEvent) => {
@@ -41,6 +46,33 @@ export function AnaHudEkrani({ vm, gezin }: Props) {
     if (!m) return;
     setGiris("");
     void vm.komutGonder(m, "yazi");
+  };
+
+  const hizliKomutlar = [
+    { ikon: "🔋", metin: "Batarya durumu" },
+    { ikon: "💾", metin: "Depolama durumu" },
+    { ikon: "📷", metin: "Kamerayı aç" },
+  ];
+
+  const komutZinciriCalistir = async () => {
+    if (komutZinciriCalisiyor) return;
+    setKomutZinciriCalisiyor(true);
+    for (const metin of ["Batarya durumu", "Depolama durumu", "Ağ durumu"]) {
+      await vm.komutGonder(metin, "yazi");
+    }
+    setKomutZinciriCalisiyor(false);
+  };
+
+  const panikBaslat = () => {
+    if (panikTimer.current) clearTimeout(panikTimer.current);
+    panikTimer.current = setTimeout(() => {
+      void vm.dinlemeDegistir();
+      gezin("gizlilik");
+    }, 900);
+  };
+
+  const panikBirak = () => {
+    if (panikTimer.current) clearTimeout(panikTimer.current);
   };
 
   const renk = DURUM_RENK[vm.hudDurumu];
@@ -86,11 +118,26 @@ export function AnaHudEkrani({ vm, gezin }: Props) {
 
       {/* Komut paneli */}
       <section className="hud-command cam mt-4 p-3 sm:p-5" aria-label="Komut paneli">
+        <div className="mb-2 flex items-center gap-2 overflow-hidden" aria-label="Hızlı komutlar">
+          {hizliKomutlar.map((k) => (
+            <button key={k.metin} type="button" className="dugme min-h-9 shrink-0 px-3 py-1 text-xs" onClick={() => void vm.komutGonder(k.metin, "yazi")}>
+              {k.ikon} {k.metin}
+            </button>
+          ))}
+          <button type="button" className="dugme min-h-9 shrink-0 px-3 py-1 text-xs" disabled={komutZinciriCalisiyor} onClick={() => void komutZinciriCalistir()}>
+            {komutZinciriCalisiyor ? "Zincir çalışıyor…" : "⚡ Komut zinciri"}
+          </button>
+        </div>
         <div className="hud-command-message min-h-[3.5rem]">
           {vm.araMetin ? (
-            <p className="text-enerji-yesil text-base italic break-words" aria-live="polite">
-              🎙 {vm.araMetin}…
-            </p>
+            <div className="flex items-center gap-2" aria-live="polite">
+              <div className="flex h-7 items-end gap-0.5" aria-hidden="true">
+                {[45, 70, 100, 55, 85, 40].map((h, i) => (
+                  <span key={i} className="anim-nabiz w-1 rounded-full bg-enerji-yesil" style={{ height: `${h}%`, animationDelay: `${i * 90}ms` }} />
+                ))}
+              </div>
+              <p className="text-enerji-yesil min-w-0 text-base italic break-words">🎙 {vm.araMetin}…</p>
+            </div>
           ) : vm.sonYanit ? (
             <AkanMetin metin={vm.sonYanit} />
           ) : (
@@ -133,6 +180,10 @@ export function AnaHudEkrani({ vm, gezin }: Props) {
           <button
             type="button"
             onClick={() => void vm.dinlemeDegistir()}
+            onPointerDown={panikBaslat}
+            onPointerUp={panikBirak}
+            onPointerCancel={panikBirak}
+            onPointerLeave={panikBirak}
             className={`dugme ${vm.dinliyor ? "dugme-kirmizi" : "dugme-yesil"}`}
             aria-pressed={vm.dinliyor}
             title={vm.sesTaniyiciVar ? undefined : "Bu tarayıcı konuşma tanımayı desteklemiyor"}
