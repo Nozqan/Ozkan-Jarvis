@@ -1,0 +1,200 @@
+@import "tailwindcss";
+
+/* AKREP JARVIS — renk paleti (ortak/tema/renkler.ts ile aynı değerler) */
+@theme {
+  --color-uzay: #050812;
+  --color-lacivert: #0b1224;
+  --color-cam: #172033;
+  --color-altin: #ffc928;
+  --color-gunes: #ffe36a;
+  --color-enerji-kirmizi: #ff4d38;
+  --color-enerji-yesil: #54e38e;
+  --color-bilgi: #67c7ff;
+  --color-uyari: #ffb547;
+  --color-hata: #ff5e6c;
+  --color-metin: #f7f8fc;
+  --color-metin2: #a9b3c7;
+  --font-sans: "Segoe UI", "Inter", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+  background: #050812;
+  color: #f7f8fc;
+  font-family: var(--font-sans);
+  -webkit-tap-highlight-color: transparent;
+  overflow-x: hidden;
+}
+
+@layer components {
+/* ---------- Glassmorphism yüzeyleri (hiç keskin köşe yok) ---------- */
+.cam {
+  position: relative;
+  border-radius: 28px;
+  background: linear-gradient(150deg, rgba(23, 32, 51, 0.74), rgba(11, 18, 36, 0.56));
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  backdrop-filter: blur(18px) saturate(150%);
+  border: 1px solid rgba(255, 201, 40, 0.28);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 227, 106, 0.2),
+    inset 0 -14px 32px rgba(0, 0, 0, 0.35),
+    0 12px 40px rgba(0, 0, 0, 0.45),
+    0 0 26px rgba(255, 201, 40, 0.08);
+}
+.cam-oval {
+  border-radius: 9999px;
+}
+.cam-ince {
+  border-radius: 22px;
+  background: rgba(23, 32, 51, 0.55);
+  border: 1px solid rgba(255, 201, 40, 0.18);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 -8px 18px rgba(0, 0, 0, 0.3);
+}
+.dusuk-performans .cam {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  background: linear-gradient(150deg, rgba(23, 32, 51, 0.92), rgba(11, 18, 36, 0.88));
+}
+
+/* ---------- Oval düğmeler ---------- */
+.dugme {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  padding: 0.55rem 1.2rem;
+  border-radius: 9999px;
+  font-weight: 600;
+  font-size: 0.92rem;
+  line-height: 1.15;
+  color: #f7f8fc;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.02));
+  border: 1px solid rgba(255, 201, 40, 0.35);
+  box-shadow: inset 0 1px 0 rgba(255, 227, 106, 0.22), 0 4px 18px rgba(0, 0, 0, 0.35);
+  transition: transform 0.18s ease, box-shadow 0.25s ease, background 0.25s ease, opacity 0.2s;
+  cursor: pointer;
+  text-align: center;
+  max-width: 100%;
+}
+.dugme:hover {
+  box-shadow: inset 0 1px 0 rgba(255, 227, 106, 0.3), 0 0 22px rgba(255, 201, 40, 0.28);
+}
+.dugme:active {
+  transform: scale(0.96);
+}
+.dugme:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.dugme:focus-visible,
+.alan:focus-visible {
+  outline: 2px solid #ffe36a;
+  outline-offset: 2px;
+}
+.dugme-altin {
+  color: #1a1204;
+  background: linear-gradient(160deg, #ffe36a, #ffc928 60%, #ffb547);
+  border-color: rgba(255, 227, 106, 0.8);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 0 24px rgba(255, 201, 40, 0.35);
+}
+.dugme-yesil {
+  background: linear-gradient(160deg, rgba(84, 227, 142, 0.35), rgba(84, 227, 142, 0.12));
+  border-color: rgba(84, 227, 142, 0.7);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 0 24px rgba(84, 227, 142, 0.35);
+}
+.dugme-kirmizi {
+  background: linear-gradient(160deg, rgba(255, 94, 108, 0.35), rgba(255, 77, 56, 0.12));
+  border-color: rgba(255, 94, 108, 0.7);
+}
+
+/* ---------- Giriş alanları ---------- */
+.alan {
+  width: 100%;
+  min-height: 46px;
+  padding: 0.6rem 1.1rem;
+  border-radius: 9999px;
+  color: #f7f8fc;
+  background: rgba(5, 8, 18, 0.55);
+  border: 1px solid rgba(255, 201, 40, 0.25);
+  box-shadow: inset 0 3px 10px rgba(0, 0, 0, 0.45);
+  font-size: 0.95rem;
+}
+.alan::placeholder {
+  color: #7f8aa3;
+}
+textarea.alan {
+  border-radius: 22px;
+}
+select.alan {
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, #ffc928 50%), linear-gradient(135deg, #ffc928 50%, transparent 50%);
+  background-position: calc(100% - 20px) 50%, calc(100% - 14px) 50%;
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+  padding-right: 2.4rem;
+}
+select.alan option {
+  background: #0b1224;
+}
+
+}
+
+/* ---------- Kaydırma çubuğu (yuvarlak) ---------- */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 201, 40, 0.4) transparent;
+}
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 201, 40, 0.4);
+  border-radius: 9999px;
+}
+
+/* ---------- Animasyonlar ---------- */
+@keyframes akrep-nabiz {
+  0%, 100% { transform: scale(1); opacity: 0.9; }
+  50% { transform: scale(1.12); opacity: 1; }
+}
+@keyframes akrep-giris {
+  from { opacity: 0; transform: translateY(14px) scale(0.985); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes akrep-tarama {
+  0% { top: 4%; opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { top: 96%; opacity: 0; }
+}
+@keyframes akrep-yanip {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+.anim-giris { animation: akrep-giris 0.45s ease both; }
+.anim-nabiz { animation: akrep-nabiz 1.4s ease-in-out infinite; }
+.anim-yanip { animation: akrep-yanip 1.1s ease-in-out infinite; }
+
+.altin-yazi {
+  background: linear-gradient(180deg, #fff3b0, #ffc928 55%, #ff9a2e);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 14px rgba(255, 201, 40, 0.55));
+}
+
+/* Hareket azaltma: erişilebilirlik seçeneği */
+.hareket-azalt *,
+.hareket-azalt *::before,
+.hareket-azalt *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .anim-nabiz, .anim-yanip { animation: none; }
+}
