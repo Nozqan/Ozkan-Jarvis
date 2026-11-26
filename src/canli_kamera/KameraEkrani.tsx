@@ -27,9 +27,13 @@ export function KameraEkrani() {
   const [ayarHatasi, setAyarHatasi] = useState<UygulamaHatasi | null>(null);
   const [kopyalandi, setKopyalandi] = useState<string | null>(null);
   const [kopyalamaHatasi, setKopyalamaHatasi] = useState<string | null>(null);
+  const [izgaraAcik, setIzgaraAcik] = useState(true);
+  const [nfcDurumu, setNfcDurumu] = useState("NFC durumu kontrol ediliyor…");
 
   useEffect(() => {
     const z = setInterval(() => setSimdi(Date.now()), 1000);
+    const NDEF = (window as unknown as { NDEFReader?: unknown }).NDEFReader;
+    setNfcDurumu(NDEF ? "NFC taraması kullanılabilir" : "Bu tarayıcıda NFC tarama yok");
     return () => clearInterval(z);
   }, []);
 
@@ -64,6 +68,14 @@ export function KameraEkrani() {
       <div className="camera-preview cam relative mx-auto w-full max-w-3xl shrink overflow-hidden" style={{ borderRadius: 32, padding: 0 }}>
         <video ref={vm.videoRef} className="absolute inset-0 h-full w-full object-cover" playsInline muted aria-label="Canlı kamera önizlemesi" style={{ background: "#050812" }} />
         <KameraHudKatmani videoRef={vm.videoRef} kilitler={vm.kilitler} analizde={analizde || vm.jestYukleniyor} aktif={acik} />
+        {izgaraAcik && acik && (
+          <div className="pointer-events-none absolute inset-0 opacity-40" aria-hidden="true">
+            <div className="absolute top-1/3 right-0 left-0 border-t border-white/50" />
+            <div className="absolute top-2/3 right-0 left-0 border-t border-white/50" />
+            <div className="absolute top-0 bottom-0 left-1/3 border-l border-white/50" />
+            <div className="absolute top-0 right-1/3 bottom-0 border-l border-white/50" />
+          </div>
+        )}
 
         {acik && (
           <>
@@ -150,6 +162,27 @@ export function KameraEkrani() {
         <button className="dugme dugme-altin" onClick={() => void vm.metinOku()} disabled={!acik || vm.meşgul}>📄 Metin oku</button>
         <button className="dugme dugme-altin" onClick={() => void vm.nesneTani()} disabled={!acik || vm.meşgul}>🎯 Nesne tanı</button>
         <button className="dugme dugme-altin" onClick={() => void vm.kodTani()} disabled={!acik || vm.meşgul}>▦ QR / barkod</button>
+        <button className={`dugme ${izgaraAcik ? "dugme-yesil" : ""}`} onClick={() => setIzgaraAcik((v) => !v)} aria-pressed={izgaraAcik}>⌗ Izgara</button>
+        <button
+          className="dugme"
+          disabled={!acik}
+          onClick={async () => {
+            const tracks = (vm.videoRef.current?.srcObject as MediaStream | null)?.getVideoTracks() ?? [];
+            const constraints = tracks[0]?.getCapabilities?.() as MediaTrackCapabilities & { focusMode?: string[] };
+            if (!constraints?.focusMode) {
+              setNfcDurumu("Bu cihazda manuel odak desteği yok");
+              return;
+            }
+            try {
+              await tracks[0].applyConstraints({ advanced: [{ focusMode: "continuous" } as MediaTrackConstraintSet] });
+              setNfcDurumu("Sürekli odak etkin");
+            } catch {
+              setNfcDurumu("Odak ayarı cihaz tarafından reddedildi");
+            }
+          }}
+        >
+          ◎ Odak
+        </button>
         <button className="dugme" onClick={vm.ortamAnaliz} disabled={!acik || vm.meşgul}>🌗 Ortam analizi</button>
         <button className={`dugme ${vm.jestAktif ? "dugme-yesil" : ""}`} onClick={() => void vm.jestDegistir()} disabled={!acik || vm.jestYukleniyor} aria-pressed={vm.jestAktif}>
           ✋ Jest {vm.jestAktif ? "açık" : "algıla"}
@@ -163,6 +196,7 @@ export function KameraEkrani() {
           <HataKutusu hata={vm.hata} tekrarDene={() => (acik ? undefined : void vm.ac())} kapat={vm.hatayiKapat} />
         </div>
       )}
+      <p className="text-metin2 mt-2 text-center text-[0.68rem]" role="status">📡 {nfcDurumu}</p>
 
       {/* Sonuç kartları */}
       <section className="camera-results mt-5 min-h-0 flex-1 overflow-hidden" aria-label="Tarama sonuçları">
@@ -177,7 +211,7 @@ export function KameraEkrani() {
               <li key={k.id} className="cam anim-giris p-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <p className="text-altin min-w-0 font-semibold break-words">
-                    <span className="cam-oval mr-2 inline-block rounded-full bg-white/10 px-2 py-0.5 text-[0.65rem] text-metin">{TUR_ETIKET[k.tur]}</span>
+                    <span className={`cam-oval mr-2 inline-block rounded-full px-2 py-0.5 text-[0.65rem] ${k.tur === "ocr" ? "bg-bilgi/15 text-bilgi" : k.tur === "kod" ? "bg-enerji-yesil/15 text-enerji-yesil" : "bg-altin/15 text-altin"}`}>{TUR_ETIKET[k.tur]}</span>
                     {k.baslik}
                   </p>
                   <span className="text-metin2 text-xs">{tarihSaat(k.tarih)}</span>
