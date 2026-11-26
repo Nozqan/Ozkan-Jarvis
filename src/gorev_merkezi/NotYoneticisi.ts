@@ -25,6 +25,13 @@ export function notSil(id: string): void {
   notDeposu.ata((o) => o.filter((n) => n.id !== id));
 }
 
+export function notSabitle(id: string): void {
+  notDeposu.ata((o) =>
+    o.map((n) => (n.id === id ? { ...n, sabit: !n.sabit } : n))
+      .sort((a, b) => Number(Boolean(b.sabit)) - Number(Boolean(a.sabit))),
+  );
+}
+
 export function notlariTemizle(): void {
   notDeposu.ata([]);
 }

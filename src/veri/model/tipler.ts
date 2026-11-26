@@ -41,6 +41,7 @@ export interface Not {
   metin: string;
   olusturma: number;
   kaynak: "metin" | "ses" | "komut";
+  sabit?: boolean;
 }
 
 export interface Hatirlatici {

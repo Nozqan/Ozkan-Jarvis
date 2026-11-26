@@ -40,6 +40,8 @@ export function HatirlaticilarPaneli() {
   const [bilgi, setBilgi] = useState("");
   const [bildirim, setBildirim] = useState<BildirimDurumu>(() => bildirimDurumu());
   const [kesinAlarm, setKesinAlarm] = useState<boolean | null>(null);
+  const [hatirlaticiArama, setHatirlaticiArama] = useState("");
+  const [suruklenenId, setSuruklenenId] = useState<string | null>(null);
   const [, tik] = useState(0);
 
   useEffect(() => {
@@ -107,6 +109,22 @@ export function HatirlaticilarPaneli() {
 
   const bekleyen = liste.filter((h) => !h.tamamlandi);
   const biten = liste.filter((h) => h.tamamlandi);
+  const gorunenBekleyen = bekleyen.filter((h) => h.metin.toLocaleLowerCase("tr").includes(hatirlaticiArama.toLocaleLowerCase("tr")));
+  const bugun = bekleyen.filter((h) => new Date(h.zaman).toDateString() === new Date().toDateString()).length;
+
+  const surukleBirak = (hedefId: string) => {
+    if (!suruklenenId || suruklenenId === hedefId) return;
+    hatirlaticiDeposu.ata((onceki) => {
+      const kaynak = onceki.find((h) => h.id === suruklenenId);
+      const hedef = onceki.find((h) => h.id === hedefId);
+      if (!kaynak || !hedef) return onceki;
+      const kalan = onceki.filter((h) => h.id !== suruklenenId);
+      const hedefIndeks = kalan.findIndex((h) => h.id === hedefId);
+      kalan.splice(hedefIndeks, 0, kaynak);
+      return kalan;
+    });
+    setSuruklenenId(null);
+  };
 
   return (
     <div className="space-y-3">
@@ -160,13 +178,51 @@ export function HatirlaticilarPaneli() {
         </button>
       </div>
 
+      <div className="cam p-3 sm:p-4">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <p className="text-sm font-bold">Bugünkü yoğunluk</p>
+            <p className="text-metin2 mt-1 text-xs">{bugun === 0 ? "Bugün için bekleyen hatırlatıcı yok." : `Bugün ${bugun} hatırlatıcı bekliyor.`}</p>
+          </div>
+          <button
+            type="button"
+            className="dugme min-h-9 px-3 py-1 text-xs"
+            disabled={!metin.trim()}
+            onClick={() => {
+              const onerilen = new Date();
+              onerilen.setMinutes(onerilen.getMinutes() + (bugun > 3 ? 30 : 15));
+              void olustur(onerilen.getTime());
+            }}
+          >
+            ✨ Akıllı saat öner
+          </button>
+        </div>
+      </div>
+
+      <input
+        className="alan"
+        type="search"
+        value={hatirlaticiArama}
+        onChange={(e) => setHatirlaticiArama(e.target.value)}
+        placeholder="Hatırlatıcılarda ara…"
+        aria-label="Hatırlatıcılarda ara"
+      />
+
       <h2 className="text-lg font-bold">Bekleyenler</h2>
-      {bekleyen.length === 0 ? (
+      {gorunenBekleyen.length === 0 ? (
         <div className="cam-ince p-4 text-center text-sm text-metin2">Bekleyen hatırlatıcı yok.</div>
       ) : (
         <ul className="space-y-2">
-          {bekleyen.map((h) => (
-            <li key={h.id} className="cam flex items-center justify-between gap-3 p-3 sm:p-4">
+          {gorunenBekleyen.map((h) => (
+            <li
+              key={h.id}
+              draggable
+              onDragStart={() => setSuruklenenId(h.id)}
+              onDragOver={(e) => e.preventDefault()}
+              onDragEnd={() => setSuruklenenId(null)}
+              onDrop={() => surukleBirak(h.id)}
+              className="cam flex cursor-grab items-center justify-between gap-3 p-3 active:cursor-grabbing sm:p-4"
+            >
               <div className="min-w-0">
                 <p className="text-sm font-medium break-words">{h.metin}</p>
                 <p className="text-metin2 text-xs">{tarihSaat(h.zaman)} · {kalanMetin(h.zaman - Date.now())}</p>

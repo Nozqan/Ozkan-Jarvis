@@ -7,7 +7,7 @@ import { HataKutusu } from "@/ortak/hata/HataKutusu";
 import { KonusmaTaniyici } from "@/ses_motoru/KonusmaTaniyici";
 import { MikrofonYoneticisi } from "@/ses_motoru/MikrofonYoneticisi";
 import type { UygulamaHatasi } from "@/veri/model/tipler";
-import { notAra, notEkle, notSil } from "./NotYoneticisi";
+import { notAra, notEkle, notSabitle, notSil } from "./NotYoneticisi";
 
 interface Props {
   /** Ana HUD dinliyorsa, sesli not öncesi durdurmak için */
@@ -97,7 +97,12 @@ export function NotlarPaneli({ hudDinlemeyiDurdur }: Props) {
                   {tarihSaat(n.olusturma)} · {n.kaynak === "ses" ? "Sesli" : n.kaynak === "komut" ? "Komutla" : "Yazıyla"}
                 </p>
               </div>
-              <button className="dugme dugme-kirmizi min-h-9 shrink-0 px-3 py-1 text-xs" onClick={() => notSil(n.id)} aria-label="Notu sil">Sil</button>
+              <div className="flex shrink-0 flex-col gap-2">
+                <button className={`dugme min-h-9 px-3 py-1 text-xs ${n.sabit ? "dugme-altin" : ""}`} onClick={() => notSabitle(n.id)} aria-label={n.sabit ? "Sabitlemeyi kaldır" : "Notu sabitle"}>
+                  {n.sabit ? "📌 Sabit" : "Sabitle"}
+                </button>
+                <button className="dugme dugme-kirmizi min-h-9 px-3 py-1 text-xs" onClick={() => notSil(n.id)} aria-label="Notu sil">Sil</button>
+              </div>
             </li>
           ))}
         </ul>
