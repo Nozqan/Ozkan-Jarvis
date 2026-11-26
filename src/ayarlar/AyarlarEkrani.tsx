@@ -36,12 +36,7 @@ function Kaydirici({ etiket, deger, min, max, adim, degisti }: { etiket: string;
   );
 }
 
-interface Props {
-  gizlilikAc: () => void;
-  acilisiOynat: () => void;
-}
-
-export function AyarlarEkrani({ gizlilikAc, acilisiOynat }: Props) {
+export function AyarlarEkrani() {
   const a = useAyarlar();
   const openaiVar = useAnahtarVar("openai");
   const geminiVar = useAnahtarVar("gemini");
@@ -105,7 +100,7 @@ export function AyarlarEkrani({ gizlilikAc, acilisiOynat }: Props) {
   const testRenk = !test ? "#A9B3C7" : test.kod === "bagli" || test.kod === "yerel" ? "#54E38E" : test.kod === "kota" ? "#FFB547" : "#FF5E6C";
 
   return (
-    <div className="mx-auto w-full max-w-3xl space-y-4 px-3 pt-14 pb-28 sm:px-6">
+    <div className="mx-auto h-[calc(100dvh-4.5rem)] max-w-3xl space-y-4 overflow-y-auto px-3 pt-14 pb-28 sm:px-6">
       <h1 className="altin-yazi text-xl font-extrabold sm:text-2xl">Ayarlar</h1>
       {hata && <HataKutusu hata={hata} kapat={() => setHata(null)} />}
       {mesaj && (
@@ -126,15 +121,10 @@ export function AyarlarEkrani({ gizlilikAc, acilisiOynat }: Props) {
         <label className="block px-3 py-2">
           <span className="text-sm">Performans profili</span>
           <select className="alan mt-1" value={a.performans} onChange={(e) => ayarGuncelle({ performans: e.target.value as typeof a.performans })}>
-            <option value="otomatik">Otomatik (cihaza ve kare hızına göre)</option>
-            <option value="yuksek">Yüksek (60 FPS hedefi)</option>
-            <option value="dengeli">Dengeli</option>
-            <option value="dusuk">Düşük (az parçacık, pil dostu)</option>
+            <option value="otomatik">Otomatik</option>
+            <option value="yuksek">Yüksek (120 FPS hedefi)</option>
           </select>
         </label>
-        <Anahtar acik={a.hareketAzalt} degisti={(v) => ayarGuncelle({ hareketAzalt: v })} etiket="Hareketi azalt" aciklama="Animasyonları ve titreşimi belirgin biçimde yavaşlatır (erişilebilirlik)." />
-        <Anahtar acik={a.tamAcilis} degisti={(v) => ayarGuncelle({ tamAcilis: v })} etiket="Her zaman tam açılış animasyonu" aciklama="Kapalıyken ikinci açılıştan itibaren kısaltılmış animasyon gösterilir." />
-        <div className="px-3 py-2"><button className="dugme" onClick={acilisiOynat}>▶ Açılış animasyonunu şimdi oynat</button></div>
       </Bolum>
 
       <Bolum baslik="Yapay zekâ sağlayıcısı">
@@ -227,7 +217,7 @@ export function AyarlarEkrani({ gizlilikAc, acilisiOynat }: Props) {
         )}
       </Bolum>
 
-      <Bolum baslik="Veri ve gizlilik">
+      <Bolum baslik="Veriler">
         <Anahtar acik={a.sohbetGecmisiniSakla} degisti={(v) => ayarGuncelle({ sohbetGecmisiniSakla: v })} etiket="Sohbet geçmişini cihazda sakla" aciklama="Kapalıyken konuşmalar kalıcı kaydedilmez." />
         <div className="flex flex-wrap gap-2 px-3 py-2">
           {[
@@ -243,7 +233,6 @@ export function AyarlarEkrani({ gizlilikAc, acilisiOynat }: Props) {
           ))}
           {silOnay && <button className="dugme min-h-10 px-3 py-1 text-xs" onClick={() => setSilOnay(null)}>Vazgeç</button>}
         </div>
-        <div className="px-3 py-2"><button className="dugme" onClick={gizlilikAc}>🔒 Gizlilik bilgilendirmesini oku</button></div>
       </Bolum>
 
       <p className="text-metin2 pb-2 text-center text-xs">AKREP JARVIS · Geliştirici: Nebi Özkan</p>

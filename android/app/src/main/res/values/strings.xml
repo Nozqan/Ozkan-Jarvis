@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">AKREP JARVIS</string>
+    <string name="title_activity_main">AKREP JARVIS</string>
+    <string name="package_name">com.akrepjarvis.app</string>
+    <string name="custom_url_scheme">com.akrepjarvis.app</string>
+</resources>

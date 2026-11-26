@@ -4,8 +4,8 @@ import { useEffect } from "react";
 import { kaliciDepo, useDepo } from "@/ortak/yardimci/kaliciDepo";
 import { BATARYA_YOK, bataryaDinle, bataryaOku, type BataryaBilgisi } from "./BataryaIzleyici";
 import { DEPOLAMA_YOK, depolamaOku, type DepolamaBilgisi } from "./DepolamaIzleyici";
-import { BELLEK_YOK, bellekOku, type BellekBilgisi } from "./BellekIzleyici";
-import { agDinle, agOku, gecikmeOlc, type AgBilgisi } from "./AgIzleyici";
+import { BELLEK_YOK, bellekOku, androidBellekOku, type BellekBilgisi } from "./BellekIzleyici";
+import { agDinle, agOku, androidAgOku, gecikmeOlc, type AgBilgisi } from "./AgIzleyici";
 
 export interface SistemDurumu {
   batarya: BataryaBilgisi;
@@ -26,13 +26,19 @@ const YENILEME_MS = 15000;
 
 /** Hızlı (batarya hariç) alanları günceller. */
 async function tazele(gecikmeyiOlc: boolean): Promise<void> {
-  const [depolama, batarya] = await Promise.all([depolamaOku(), bataryaOku()]);
-  const ag = agOku();
-  const gecikme = gecikmeyiOlc && ag.cevrimici ? await gecikmeOlc() : null;
+  const [depolama, batarya, androidAg, androidBellek] = await Promise.all([
+    depolamaOku(),
+    bataryaOku(),
+    androidAgOku(),
+    androidBellekOku(),
+  ]);
+  const ag = androidAg ?? agOku();
+  const bellek = androidBellek ?? bellekOku();
+  const gecikme = !androidAg && gecikmeyiOlc && ag.cevrimici ? await gecikmeOlc() : null;
   sistemDeposu.ata((o) => ({
     batarya,
     depolama,
-    bellek: bellekOku(),
+    bellek,
     ag,
     gecikmeMs: ag.cevrimici ? (gecikmeyiOlc ? gecikme : o.gecikmeMs) : null,
     guncelleme: Date.now(),

@@ -26,7 +26,7 @@ export interface Ayarlar {
   sesHizi: number;
   sesTonu: number;
   uyandirmaKelimesi: boolean;
-  performans: "otomatik" | "yuksek" | "dengeli" | "dusuk";
+  performans: "otomatik" | "yuksek";
   hareketAzalt: boolean;
   tamAcilis: boolean;
   sohbetGecmisiniSakla: boolean;

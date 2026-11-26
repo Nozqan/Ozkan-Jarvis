@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { ayarDeposu, useAyarlar } from "@/veri/depo/AyarDeposu";
 
-export type PerformansSeviyesi = "yuksek" | "dengeli" | "dusuk";
+export type PerformansSeviyesi = "yuksek";
 
 export interface PerformansAyari {
   seviye: PerformansSeviyesi;
@@ -13,7 +13,7 @@ export interface PerformansAyari {
   hareketAzalt: boolean;
 }
 
-const SIRA: PerformansSeviyesi[] = ["yuksek", "dengeli", "dusuk"];
+const SIRA: PerformansSeviyesi[] = ["yuksek"];
 let calisma: PerformansSeviyesi | null = null;
 const dinleyiciler = new Set<() => void>();
 let dusukFpsSayaci = 0;
@@ -23,8 +23,8 @@ export function otomatikSeviye(): PerformansSeviyesi {
   const n = typeof navigator !== "undefined" ? navigator : undefined;
   const cekirdek = n?.hardwareConcurrency ?? 4;
   const bellek = (n as unknown as { deviceMemory?: number } | undefined)?.deviceMemory ?? 4;
-  if (bellek <= 2 || cekirdek <= 2) return "dusuk";
-  if (bellek <= 4 || cekirdek <= 4) return "dengeli";
+  void cekirdek;
+  void bellek;
   return "yuksek";
 }
 
@@ -51,9 +51,7 @@ const abone = (d: () => void) => {
 
 export function profilAyari(seviye: PerformansSeviyesi, hareketAzalt: boolean): PerformansAyari {
   const tablo = {
-    yuksek: { parcacik: 1, dpr: 2, maksFps: 60 },
-    dengeli: { parcacik: 0.6, dpr: 1.5, maksFps: 45 },
-    dusuk: { parcacik: 0.3, dpr: 1, maksFps: 30 },
+    yuksek: { parcacik: 1, dpr: 2, maksFps: 120 },
   }[seviye];
   return { seviye, ...tablo, hareketAzalt };
 }

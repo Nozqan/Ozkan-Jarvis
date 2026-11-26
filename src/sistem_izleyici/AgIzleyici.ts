@@ -23,6 +23,25 @@ function baglanti(): BaglantiNesnesi | null {
   return (navigator as unknown as { connection?: BaglantiNesnesi }).connection ?? null;
 }
 
+import { AkrepSystem, androidCapinda } from '@/yerel_android/AkrepNative';
+
+export async function androidAgOku(): Promise<AgBilgisi | null> {
+  if (!androidCapinda()) return null;
+  try {
+    const s = await AkrepSystem.getStatus();
+    return {
+      cevrimici: s.network.connected,
+      tur: s.network.type,
+      etkinTur: s.network.type,
+      indirmeMbps: null,
+      rttMs: null,
+      veriTasarrufu: null,
+    };
+  } catch {
+    return null;
+  }
+}
+
 export function agOku(): AgBilgisi {
   const b = baglanti();
   return {

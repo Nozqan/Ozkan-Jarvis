@@ -9,7 +9,22 @@ export interface DepolamaBilgisi {
 
 export const DEPOLAMA_YOK: DepolamaBilgisi = { desteklenir: false, toplam: null, kullanilan: null, bos: null };
 
+import { AkrepSystem, androidCapinda } from '@/yerel_android/AkrepNative';
+
 export async function depolamaOku(): Promise<DepolamaBilgisi> {
+  if (androidCapinda()) {
+    try {
+      const s = await AkrepSystem.getStatus();
+      return {
+        desteklenir: s.storage.supported,
+        toplam: s.storage.total,
+        kullanilan: s.storage.used,
+        bos: s.storage.free,
+      };
+    } catch {
+      return DEPOLAMA_YOK;
+    }
+  }
   try {
     if (!navigator.storage?.estimate) return DEPOLAMA_YOK;
     const e = await navigator.storage.estimate();

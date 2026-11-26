@@ -1,6 +1,7 @@
 // Türkçe metin okuma (TTS). En doğal tr-TR sesi seçer; kaynaklar ekran kapanınca/sayfa gizlenince serbest bırakılır.
 // Not: Tarayıcı TTS ses çıkışına doğrudan erişim vermez; Güneş HUD titreşimi kelime sınırı olaylarından türetilir.
 import { sesGorsellestirici } from "@/gunes_hud/SesGorsellestirici";
+import { AkrepTts, androidCapinda } from "@/yerel_android/AkrepNative";
 
 export interface KonusmaSecenekleri {
   hiz: number;
@@ -21,7 +22,7 @@ export class TurkceMetinSeslendirici {
   }
 
   static destekleniyor(): boolean {
-    return typeof window !== "undefined" && "speechSynthesis" in window && "SpeechSynthesisUtterance" in window;
+    return androidCapinda() || (typeof window !== "undefined" && "speechSynthesis" in window && "SpeechSynthesisUtterance" in window);
   }
 
   private gizlenince = () => {
@@ -45,6 +46,17 @@ export class TurkceMetinSeslendirici {
 
   /** Metni cümle cümle okur (uzun metinlerde Chrome'un durma hatasını önler). */
   konus(metin: string, sec: KonusmaSecenekleri, olaylar?: { basladi?: () => void; bitti?: () => void }): Promise<void> {
+    if (androidCapinda()) {
+      this.konusuyor = true;
+      olaylar?.basladi?.();
+      return AkrepTts.speak({ text: metin, rate: sec.hiz, pitch: sec.ton }).then(() => {
+        this.konusuyor = false;
+        olaylar?.bitti?.();
+      }).catch(() => {
+        this.konusuyor = false;
+        olaylar?.bitti?.();
+      });
+    }
     return new Promise((coz) => {
       if (!TurkceMetinSeslendirici.destekleniyor()) {
         coz();
@@ -109,6 +121,12 @@ export class TurkceMetinSeslendirici {
 
   durdur = () => {
     if (!TurkceMetinSeslendirici.destekleniyor()) return;
+    if (androidCapinda()) {
+      void AkrepTts.stop();
+      this.konusuyor = false;
+      sesGorsellestirici.sifirla();
+      return;
+    }
     const calisiyordu = this.konusuyor;
     this.sayac++; // Bekleyen parçaların devamını iptal eder.
     speechSynthesis.cancel();

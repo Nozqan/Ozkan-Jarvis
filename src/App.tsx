@@ -1,6 +1,6 @@
 // AKREP JARVIS — uygulama kökü: açılış animasyonu → ana HUD ve ekranlar arası gezinme.
 // Geliştirici: Nebi Özkan
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { AnaHudEkrani } from "@/ana_hud/AnaHudEkrani";
 import { useAnaHudViewModel } from "@/ana_hud/AnaHudViewModel";
 import { AyarlarEkrani } from "@/ayarlar/AyarlarEkrani";
@@ -20,18 +20,25 @@ import { cihazDurumuBildir } from "@/sistem_izleyici/CihazDurumu";
 import { useAyarlar } from "@/veri/depo/AyarDeposu";
 import type { Hatirlatici } from "@/veri/model/tipler";
 import { yapayZekaDurumuHesapla } from "@/yapay_zeka/YapayZekaDurumu";
+import { AkrepSystem, androidCapinda } from "@/yerel_android/AkrepNative";
 
 function Uygulama() {
   const [giris, setGiris] = useState(true);
   const [ekran, setEkran] = useState<GezinmeHedefi>("hud");
   const [kisitli, setKisitli] = useState(false);
   const [uyari, setUyari] = useState<{ h: Hatirlatici; kacirildi: boolean } | null>(null);
+  const gecmis = useRef<GezinmeHedefi[]>(["hud"]);
   const ayar = useAyarlar();
   const perf = usePerformans();
   const openaiVar = useAnahtarVar("openai");
   const geminiVar = useAnahtarVar("gemini");
 
-  const gezin = useCallback((h: GezinmeHedefi) => setEkran(h), []);
+  const gezin = useCallback((h: GezinmeHedefi) => {
+    setEkran((onceki) => {
+      if (onceki !== h) gecmis.current = [...gecmis.current.slice(-8), h];
+      return h;
+    });
+  }, []);
   const vm = useAnaHudViewModel(gezin);
   const { duyur } = vm;
 
@@ -63,12 +70,32 @@ function Uygulama() {
     setGiris(false);
   }, []);
 
+  useEffect(() => {
+    if (!androidCapinda()) return;
+    let bekleyen = true;
+    let abonelik: { remove: () => Promise<void> } | null = null;
+    void AkrepSystem.addListener('backPressed', () => {
+      if (!bekleyen) return;
+      const onceki = gecmis.current[gecmis.current.length - 2];
+      if (onceki) {
+        gecmis.current = gecmis.current.slice(0, -1);
+        setEkran(onceki);
+      } else {
+        setEkran("hud");
+      }
+    }).then((a) => { abonelik = a; });
+    return () => {
+      bekleyen = false;
+      void abonelik?.remove();
+    };
+  }, []);
+
   const hudDinlemeyiDurdur = useCallback(() => {
     if (vm.dinliyor) void vm.dinlemeDegistir();
   }, [vm]);
 
   return (
-    <div className="relative min-h-screen text-metin">
+    <div className="relative h-[100dvh] overflow-hidden text-metin">
       <UzayArkaplani />
       {giris ? (
         <GirisEkrani bitti={girisBitti} />
@@ -90,12 +117,12 @@ function Uygulama() {
               <button className="dugme min-h-9 shrink-0 px-3 py-1 text-xs" onClick={() => setUyari(null)}>Tamam</button>
             </div>
           )}
-          <main>
+          <main className="h-[calc(100dvh-0px)] overflow-hidden">
             <HataSinirlayici ad="Bu ekran" key={ekran}>
               {ekran === "hud" && <AnaHudEkrani vm={vm} gezin={gezin} />}
               {ekran === "kamera" && <KameraEkrani />}
               {ekran === "gorev" && <GorevMerkeziEkrani hudDinlemeyiDurdur={hudDinlemeyiDurdur} />}
-              {ekran === "ayarlar" && <AyarlarEkrani gizlilikAc={() => setEkran("gizlilik")} acilisiOynat={() => setGiris(true)} />}
+              {ekran === "ayarlar" && <AyarlarEkrani />}
               {ekran === "gizlilik" && <GizlilikEkrani />}
             </HataSinirlayici>
           </main>

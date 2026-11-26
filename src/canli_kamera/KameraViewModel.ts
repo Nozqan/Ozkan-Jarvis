@@ -272,20 +272,6 @@ export function useKameraViewModel() {
 
   const kartSil = useCallback((id: string) => setKartlar((l) => l.filter((x) => x.id !== id)), []);
 
-  // Ekran açılınca: izin zaten verilmişse otomatik başlat; değilse kullanıcıdan açık onay bekle.
-  useEffect(() => {
-    let iptal = false;
-    const perm = navigator.permissions?.query?.({ name: "camera" as PermissionName });
-    perm
-      ?.then((p) => {
-        if (!iptal && p.state === "granted") void ac();
-      })
-      .catch(() => {});
-    return () => {
-      iptal = true;
-    };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
   // Sekme gizlenince/ekran kapanınca ve ekrandan çıkınca kamera serbest bırakılır.
   useEffect(() => {
     const f = () => {

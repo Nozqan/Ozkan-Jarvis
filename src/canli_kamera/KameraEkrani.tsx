@@ -49,7 +49,7 @@ export function KameraEkrani() {
   };
 
   return (
-    <div className="mx-auto w-full max-w-4xl px-3 pt-14 pb-28 sm:px-6">
+    <div className="mx-auto h-[calc(100dvh-4.5rem)] max-w-4xl overflow-hidden px-3 pt-14 pb-28 sm:px-6">
       <header className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <h1 className="altin-yazi text-xl font-extrabold sm:text-2xl">Canlı Kamera Tarama</h1>
         <div className="cam cam-oval flex items-center gap-2 px-3 py-1.5 text-xs font-semibold" style={{ color: renk, borderColor: `${renk}88` }} role="status" aria-live="polite">

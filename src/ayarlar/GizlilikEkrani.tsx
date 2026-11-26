@@ -63,16 +63,16 @@ const BOLUMLER: { baslik: string; simge: string; maddeler: string[] }[] = [
 
 export function GizlilikEkrani() {
   return (
-    <div className="mx-auto w-full max-w-3xl space-y-4 px-3 pt-14 pb-28 sm:px-6">
+    <div className="mx-auto h-[calc(100dvh-4.5rem)] max-w-3xl space-y-4 overflow-y-auto px-3 pt-14 pb-28 sm:px-6">
       <h1 className="altin-yazi text-xl font-extrabold sm:text-2xl">Gizlilik</h1>
       <p className="text-metin2 text-sm">AKREP JARVIS verilerinizi nasıl kullanır? Aşağıda kamera, mikrofon, veri işleme ve yapay zekâ ile ilgili her şey açıkça anlatılmıştır.</p>
       {BOLUMLER.map((b) => (
-        <section key={b.baslik} className="cam p-4 sm:p-5">
-          <h2 className="mb-2 flex items-center gap-2 text-lg font-bold">
-            <span aria-hidden="true">{b.simge}</span>
-            <span className="break-words">{b.baslik}</span>
-          </h2>
-          <ul className="text-metin2 space-y-2 text-sm leading-relaxed">
+        <details key={b.baslik} className="cam px-4 py-3 sm:px-5">
+          <summary className="cursor-pointer list-none text-base font-bold">
+            <span aria-hidden="true" className="mr-2">{b.simge}</span>
+            {b.baslik}
+          </summary>
+          <ul className="text-metin2 mt-3 space-y-2 text-sm leading-relaxed">
             {b.maddeler.map((m) => (
               <li key={m} className="flex gap-2">
                 <span className="text-altin" aria-hidden="true">•</span>
@@ -80,7 +80,7 @@ export function GizlilikEkrani() {
               </li>
             ))}
           </ul>
-        </section>
+        </details>
       ))}
     </div>
   );

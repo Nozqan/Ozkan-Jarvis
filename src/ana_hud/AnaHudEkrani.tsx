@@ -19,18 +19,6 @@ const DURUM_RENK: Record<HudDurumu, string> = {
   cevrimdisi: "#67C7FF",
 };
 
-const HIZLI_KOMUTLAR = [
-  "Batarya durumu",
-  "Feneri aç",
-  "Feneri kapat",
-  "Depolama durumu",
-  "Ağ durumu",
-  "Uygulama durumu",
-  "Son notu göster",
-  "Saat kaç?",
-  "Yardım",
-];
-
 interface Props {
   vm: AnaHudViewModel;
   gezin: (h: GezinmeHedefi) => void;
@@ -64,7 +52,7 @@ export function AnaHudEkrani({ vm, gezin }: Props) {
   const sesHatasi = vm.hata && /konusma|mikrofon|dil_/.test(vm.hata.kod);
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-3 pt-14 pb-28 sm:px-6">
+    <div className="mx-auto h-[calc(100dvh-4.5rem)] max-w-6xl overflow-hidden px-3 pt-14 pb-28 sm:px-6">
       <header className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <div className="min-w-0">
           <h1 className="altin-yazi text-xl font-extrabold tracking-[0.12em] sm:text-2xl">AKREP JARVIS</h1>
@@ -164,14 +152,17 @@ export function AnaHudEkrani({ vm, gezin }: Props) {
           )}
         </form>
 
-        <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label="Hızlı komutlar">
-          {HIZLI_KOMUTLAR.map((k) => (
-            <button key={k} className="dugme min-h-9 px-3 py-1 text-xs" disabled={meşgul} onClick={() => void vm.komutGonder(k, "yazi")}>
-              {k}
-            </button>
-          ))}
-          <button className="dugme min-h-9 px-3 py-1 text-xs" onClick={() => setGiris("not al: ")}>Not al…</button>
-          <button className="dugme min-h-9 px-3 py-1 text-xs" onClick={() => gezin("kamera")}>📷 Kamera</button>
+        <div className="mt-3 grid grid-cols-2 gap-2" role="group" aria-label="Ana eylemler">
+          <button
+            type="button"
+            onClick={() => void vm.dinlemeDegistir()}
+            className={`dugme w-full ${vm.dinliyor ? "dugme-kirmizi" : "dugme-yesil"}`}
+            aria-pressed={vm.dinliyor}
+          >
+            <span aria-hidden="true">{vm.dinliyor ? "⏹" : "🎙"}</span>
+            {vm.dinliyor ? "Dinlemeyi durdur" : "Dinlemeyi başlat"}
+          </button>
+          <button className="dugme w-full dugme-altin" onClick={() => gezin("kamera")}>📷 Kamera</button>
         </div>
 
         {vm.mesajlar.length > 0 && (

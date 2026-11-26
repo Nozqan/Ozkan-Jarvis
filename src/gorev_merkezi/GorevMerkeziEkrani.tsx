@@ -1,11 +1,5 @@
 // Komut ve Görev Merkezi: notlar, hatırlatıcılar, hesap makinesi, tarama arşivi ve sohbet geçmişi.
 import { useState } from "react";
-import { ArsivPaneli } from "./ArsivPaneli";
-import { HatirlaticilarPaneli } from "./HatirlaticilarPaneli";
-import { HesapPaneli } from "./HesapPaneli";
-import { NotlarPaneli } from "./NotlarPaneli";
-import { SohbetGecmisiPaneli } from "./SohbetGecmisiPaneli";
-import { HataSinirlayici } from "@/ortak/hata/HataSinirlayici";
 
 const SEKMELER = [
   { id: "notlar", ad: "📝 Notlar" },
@@ -23,7 +17,7 @@ interface Props {
 export function GorevMerkeziEkrani({ hudDinlemeyiDurdur }: Props) {
   const [sekme, setSekme] = useState<SekmeId>("notlar");
   return (
-    <div className="mx-auto w-full max-w-3xl px-3 pt-14 pb-28 sm:px-6">
+    <div className="mx-auto h-[calc(100dvh-4.5rem)] w-full max-w-3xl px-3 pt-14 pb-28 sm:px-6">
       <h1 className="altin-yazi mb-3 text-xl font-extrabold sm:text-2xl">Görev Merkezi</h1>
       <div className="cam cam-oval mb-4 flex gap-1 overflow-x-auto p-1.5" role="tablist" aria-label="Görev merkezi bölümleri">
         {SEKMELER.map((s) => (
@@ -39,13 +33,12 @@ export function GorevMerkeziEkrani({ hudDinlemeyiDurdur }: Props) {
           </button>
         ))}
       </div>
-      <HataSinirlayici ad="Görev merkezi">
-        {sekme === "notlar" && <NotlarPaneli hudDinlemeyiDurdur={hudDinlemeyiDurdur} />}
-        {sekme === "hatirlatici" && <HatirlaticilarPaneli />}
-        {sekme === "hesap" && <HesapPaneli />}
-        {sekme === "arsiv" && <ArsivPaneli />}
-        {sekme === "sohbet" && <SohbetGecmisiPaneli />}
-      </HataSinirlayici>
+      <section className="cam flex min-h-48 items-center justify-center p-6 text-center">
+        <div>
+          <p className="text-altin text-lg font-bold">Yakında gelecek</p>
+          <p className="text-metin2 mt-2 text-sm">Görev merkezi özellikleri hazırlanıyor.</p>
+        </div>
+      </section>
     </div>
   );
 }

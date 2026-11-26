@@ -71,7 +71,7 @@ export function DepolamaKarti({ d, className = "" }: { d: SistemDurumu; classNam
           <Satir e="Uygulama belleği" d={m.uygulamaKullanilan != null ? bayt(m.uygulamaKullanilan) : KULLANILAMIYOR} />
           <Satir e="Cihaz RAM'i" d={m.cihazGB != null ? `≈ ${m.cihazGB} GB` : KULLANILAMIYOR} />
         </div>
-        <p className="text-metin2 mt-1.5 text-[0.65rem] leading-tight">Depolama: tarayıcının bu uygulamaya ayırdığı alan.</p>
+        <p className="text-metin2 mt-1.5 text-[0.65rem] leading-tight">Cihazın dahili depolaması.</p>
       </Kart>
     </div>
   );
