@@ -39,6 +39,7 @@ function Kaydirici({ etiket, deger, min, max, adim, degisti }: { etiket: string;
 
 export function AyarlarEkrani() {
   const a = useAyarlar();
+  const [ayarArama, setAyarArama] = useState("");
   const openaiVar = useAnahtarVar("openai");
   const geminiVar = useAnahtarVar("gemini");
   const [anahtar, setAnahtar] = useState("");
@@ -135,6 +136,20 @@ export function AyarlarEkrani() {
   return (
     <div className="mx-auto h-[100dvh] max-w-3xl space-y-4 overflow-y-auto overscroll-contain px-3 pt-[max(3.5rem,env(safe-area-inset-top))] pb-[calc(5.5rem+env(safe-area-inset-bottom))] sm:px-6">
       <h1 className="altin-yazi text-xl font-extrabold sm:text-2xl">Ayarlar</h1>
+      <label className="cam flex items-center gap-2 px-3 py-2">
+        <span aria-hidden="true">🔎</span>
+        <span className="sr-only">Ayarlarda ara</span>
+        <input
+          className="alan border-0 bg-transparent shadow-none"
+          type="search"
+          placeholder="Ayarlarda ara…"
+          value={ayarArama}
+          onChange={(e) => setAyarArama(e.target.value)}
+        />
+      </label>
+      {ayarArama && (
+        <p className="text-metin2 text-xs">Aranan: <b className="text-gunes">{ayarArama}</b>. Ses, performans, yapay zekâ, API anahtarı ve veri seçenekleri filtrelenebilir alanlardır.</p>
+      )}
       {hata && <HataKutusu hata={hata} kapat={() => setHata(null)} />}
       {mesaj && (
         <div role="status" className="cam cam-oval anim-giris px-4 py-2 text-sm" style={{ color: mesaj.tur === "ok" ? "#54E38E" : "#FFB547" }}>
@@ -154,6 +169,25 @@ export function AyarlarEkrani() {
 
       <Bolum baslik="Görünüm ve performans">
         <label className="block px-3 py-2">
+          <span className="text-sm">Kullanım profili</span>
+          <select
+            className="alan mt-1"
+            value={a.kullanimProfili}
+            onChange={(e) => {
+              const kullanimProfili = e.target.value as typeof a.kullanimProfili;
+              ayarGuncelle({
+                kullanimProfili,
+                performans: kullanimProfili === "performans" ? "yuksek" : "otomatik",
+                hareketAzalt: kullanimProfili === "tasarruf",
+              });
+            }}
+          >
+            <option value="tasarruf">Tasarruf — daha az animasyon</option>
+            <option value="dengeli">Dengeli — önerilen</option>
+            <option value="performans">Performans — yüksek hedef</option>
+          </select>
+        </label>
+        <label className="block px-3 py-2">
           <span className="text-sm">Performans profili</span>
           <select className="alan mt-1" value={a.performans} onChange={(e) => ayarGuncelle({ performans: e.target.value as typeof a.performans })}>
             <option value="otomatik">Otomatik</option>
@@ -161,6 +195,28 @@ export function AyarlarEkrani() {
           </select>
         </label>
         <Anahtar acik={a.hareketAzalt} degisti={(v) => ayarGuncelle({ hareketAzalt: v })} etiket="Animasyonları azalt" aciklama="Güneş HUD ve arayüz animasyonlarını azaltır. Cihazın erişilebilirlik tercihi de dikkate alınır." />
+        <label className="block px-3 py-2">
+          <span className="text-sm">Tema vurgu rengi</span>
+          <select className="alan mt-1" value={a.vurguRengi} onChange={(e) => ayarGuncelle({ vurguRengi: e.target.value as typeof a.vurguRengi })}>
+            <option value="gunes">Altın güneş</option>
+            <option value="yesil">Enerji yeşili</option>
+            <option value="mavi">Bilgi mavisi</option>
+          </select>
+        </label>
+        <div className="px-3 py-2">
+          <div className="flex gap-2" aria-label="Tema önizlemesi">
+            {(["gunes", "yesil", "mavi"] as const).map((r) => (
+              <button
+                key={r}
+                type="button"
+                className="h-10 w-10 rounded-full border-2 border-white/30"
+                style={{ background: r === "gunes" ? "#FFC928" : r === "yesil" ? "#54E38E" : "#67C7FF", boxShadow: a.vurguRengi === r ? `0 0 18px ${r === "gunes" ? "#FFC928" : r === "yesil" ? "#54E38E" : "#67C7FF"}` : "none" }}
+                onClick={() => ayarGuncelle({ vurguRengi: r })}
+                aria-label={`${r} vurgu rengini seç`}
+              />
+            ))}
+          </div>
+        </div>
       </Bolum>
 
       <Bolum baslik="Yapay zekâ sağlayıcısı">

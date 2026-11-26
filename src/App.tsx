@@ -47,7 +47,11 @@ function Uygulama() {
     const k = document.documentElement.classList;
     k.toggle("dusuk-performans", perf.seviye === "dusuk");
     k.toggle("hareket-azalt", perf.hareketAzalt);
-  }, [perf.seviye, perf.hareketAzalt]);
+    document.documentElement.style.setProperty(
+      "--tema-vurgu",
+      ayar.vurguRengi === "yesil" ? "#54E38E" : ayar.vurguRengi === "mavi" ? "#67C7FF" : "#FFC928",
+    );
+  }, [perf.seviye, perf.hareketAzalt, ayar.vurguRengi]);
 
   // Yapay zekâ bağlantı durumu (monitörde görünür)
   useEffect(() => {

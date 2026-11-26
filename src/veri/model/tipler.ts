@@ -31,6 +31,9 @@ export interface Ayarlar {
   tamAcilis: boolean;
   sohbetGecmisiniSakla: boolean;
   acilisGorulduMu: boolean;
+  kullanimProfili: "tasarruf" | "dengeli" | "performans";
+  vurguRengi: "gunes" | "yesil" | "mavi";
+  ozellikRehberiGorulduMu: boolean;
 }
 
 export interface Not {
