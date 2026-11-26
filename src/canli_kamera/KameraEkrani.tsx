@@ -14,17 +14,20 @@ const DURUM_RENK: Record<KameraDurumu, string> = {
   hazir: "#54E38E",
   metin_analiz: "#FFE36A",
   nesne_analiz: "#FF4D38",
+  kod_analiz: "#67C7FF",
   sonuc_hazir: "#54E38E",
   basarisiz: "#FF5E6C",
 };
 
-const TUR_ETIKET = { ocr: "Metin", nesne: "Nesne", ortam: "Ortam", jest: "Jest" } as const;
+const TUR_ETIKET = { ocr: "Metin", nesne: "Nesne", ortam: "Ortam", jest: "Jest", kod: "QR / barkod" } as const;
 
 export function KameraEkrani() {
   const vm = useKameraViewModel();
   const [simdi, setSimdi] = useState(() => Date.now());
   const [ayarHatasi, setAyarHatasi] = useState<UygulamaHatasi | null>(null);
   const [kopyalandi, setKopyalandi] = useState<string | null>(null);
+  const [kopyalamaHatasi, setKopyalamaHatasi] = useState<string | null>(null);
+  const [seciliKartId, setSeciliKartId] = useState<string | null>(null);
 
   useEffect(() => {
     const z = setInterval(() => setSimdi(Date.now()), 1000);
@@ -32,25 +35,32 @@ export function KameraEkrani() {
   }, []);
 
   const acik = vm.metrik.genislik !== null;
-  const analizde = vm.durum === "metin_analiz" || vm.durum === "nesne_analiz";
+  const analizde = vm.durum === "metin_analiz" || vm.durum === "nesne_analiz" || vm.durum === "kod_analiz";
   const renk = DURUM_RENK[vm.durum];
   const izinPaneli = vm.durum === "izin_bekleniyor" && vm.hata?.kod === "kamera_izin_yok";
   const desteklenmiyor = !KameraYoneticisi.destekleniyor();
   const sonKart = vm.kartlar[0];
+  const kartIndeksi = Math.max(0, vm.kartlar.findIndex((k) => k.id === seciliKartId));
+  const seciliKart = vm.kartlar[kartIndeksi];
+
+  useEffect(() => {
+    setSeciliKartId(vm.kartlar[0]?.id ?? null);
+  }, [vm.kartlar[0]?.id]);
 
   const kopyala = async (id: string, metin: string) => {
+    setKopyalamaHatasi(null);
     try {
       await navigator.clipboard.writeText(metin);
       setKopyalandi(id);
       setTimeout(() => setKopyalandi(null), 1800);
     } catch {
-      /* pano izni yok: sessizce geç */
+      setKopyalamaHatasi("Panoya kopyalanamadı. Metni seçip elle kopyalayabilirsiniz.");
     }
   };
 
   return (
-    <div className="mx-auto h-[calc(100dvh-4.5rem)] max-w-4xl overflow-hidden px-3 pt-14 pb-28 sm:px-6">
-      <header className="mb-3 flex flex-wrap items-center justify-between gap-2">
+    <div className="camera-screen mx-auto flex h-[100dvh] max-w-4xl flex-col overflow-hidden px-3 pt-[max(3.5rem,env(safe-area-inset-top))] pb-[calc(5.5rem+env(safe-area-inset-bottom))] sm:px-6">
+      <header className="camera-header mb-3 flex shrink-0 flex-wrap items-center justify-between gap-2">
         <h1 className="altin-yazi text-xl font-extrabold sm:text-2xl">Canlı Kamera Tarama</h1>
         <div className="cam cam-oval flex items-center gap-2 px-3 py-1.5 text-xs font-semibold" style={{ color: renk, borderColor: `${renk}88` }} role="status" aria-live="polite">
           <span className={`inline-block h-2.5 w-2.5 rounded-full ${analizde ? "anim-nabiz" : ""}`} style={{ background: renk, boxShadow: `0 0 10px ${renk}` }} />
@@ -59,7 +69,7 @@ export function KameraEkrani() {
       </header>
 
       {/* Önizleme + HUD */}
-      <div className="cam relative mx-auto aspect-[3/4] w-full max-h-[72vh] overflow-hidden sm:aspect-video" style={{ borderRadius: 32, padding: 0 }}>
+      <div className="camera-preview cam relative mx-auto w-full max-w-3xl shrink overflow-hidden" style={{ borderRadius: 32, padding: 0 }}>
         <video ref={vm.videoRef} className="absolute inset-0 h-full w-full object-cover" playsInline muted aria-label="Canlı kamera önizlemesi" style={{ background: "#050812" }} />
         <KameraHudKatmani videoRef={vm.videoRef} kilitler={vm.kilitler} analizde={analizde || vm.jestYukleniyor} aktif={acik} />
 
@@ -144,9 +154,10 @@ export function KameraEkrani() {
       </div>
 
       {/* Denetimler */}
-      <div className="mt-3 flex flex-wrap items-center justify-center gap-2" role="group" aria-label="Tarama denetimleri">
+      <div className="camera-controls mt-2 grid shrink-0 grid-cols-3 gap-2" role="group" aria-label="Tarama denetimleri">
         <button className="dugme dugme-altin" onClick={() => void vm.metinOku()} disabled={!acik || vm.meşgul}>📄 Metin oku</button>
         <button className="dugme dugme-altin" onClick={() => void vm.nesneTani()} disabled={!acik || vm.meşgul}>🎯 Nesne tanı</button>
+        <button className="dugme dugme-altin" onClick={() => void vm.kodTani()} disabled={!acik || vm.meşgul}>▦ QR / barkod</button>
         <button className="dugme" onClick={vm.ortamAnaliz} disabled={!acik || vm.meşgul}>🌗 Ortam analizi</button>
         <button className={`dugme ${vm.jestAktif ? "dugme-yesil" : ""}`} onClick={() => void vm.jestDegistir()} disabled={!acik || vm.jestYukleniyor} aria-pressed={vm.jestAktif}>
           ✋ Jest {vm.jestAktif ? "açık" : "algıla"}
@@ -156,21 +167,44 @@ export function KameraEkrani() {
       </div>
 
       {vm.hata && !izinPaneli && (
-        <div className="mt-3">
+        <div className="camera-error mt-2 shrink-0">
           <HataKutusu hata={vm.hata} tekrarDene={() => (acik ? undefined : void vm.ac())} kapat={vm.hatayiKapat} />
         </div>
       )}
 
       {/* Sonuç kartları */}
-      <section className="mt-5" aria-label="Tarama sonuçları">
-        <h2 className="mb-2 text-lg font-bold">Sonuçlar</h2>
+      <section className="camera-results mt-2 min-h-0 flex-1 overflow-hidden" aria-label="Tarama sonuçları">
+        <div className="mb-1 flex items-center justify-between gap-2">
+          <h2 className="text-sm font-bold">Sonuçlar{vm.kartlar.length > 1 ? ` · ${vm.kartlar.length}` : ""}</h2>
+          {vm.kartlar.length > 1 && (
+            <div className="flex items-center gap-2" role="group" aria-label="Tarama sonuçları arasında gezinme">
+              <button
+                className="dugme min-h-9 px-3 py-1 text-xs"
+                onClick={() => setSeciliKartId(vm.kartlar[kartIndeksi + 1]?.id ?? null)}
+                disabled={kartIndeksi >= vm.kartlar.length - 1}
+                aria-label="Daha eski sonucu göster"
+              >
+                Daha eski
+              </button>
+              <span className="text-metin2 text-xs tabular-nums" aria-live="polite">{kartIndeksi + 1} / {vm.kartlar.length}</span>
+              <button
+                className="dugme min-h-9 px-3 py-1 text-xs"
+                onClick={() => setSeciliKartId(vm.kartlar[kartIndeksi - 1]?.id ?? null)}
+                disabled={kartIndeksi === 0}
+                aria-label="Daha yeni sonucu göster"
+              >
+                Daha yeni
+              </button>
+            </div>
+          )}
+        </div>
         {vm.kartlar.length === 0 ? (
-          <div className="cam-ince p-4 text-center text-sm text-metin2">
+          <div className="camera-empty cam-ince p-3 text-center text-xs text-metin2">
             Henüz sonuç yok. Kamerayı başlatıp “Metin oku”, “Nesne tanı” veya “Ortam analizi” düğmelerinden birine dokunun.
           </div>
         ) : (
-          <ul className="space-y-3">
-            {vm.kartlar.map((k) => (
+          <ul className="camera-result-list space-y-2 overflow-hidden">
+            {seciliKart && [seciliKart].map((k) => (
               <li key={k.id} className="cam anim-giris p-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <p className="text-altin min-w-0 font-semibold break-words">
@@ -179,8 +213,8 @@ export function KameraEkrani() {
                   </p>
                   <span className="text-metin2 text-xs">{tarihSaat(k.tarih)}</span>
                 </div>
-                <p className="text-metin mt-2 text-sm break-words whitespace-pre-wrap">{k.metin}</p>
-                <div className="mt-3 flex flex-wrap gap-2">
+                <p className="camera-result-copy text-metin mt-2 text-sm break-words whitespace-pre-wrap">{k.metin}</p>
+                <div className="camera-result-actions mt-2 flex flex-wrap gap-2">
                   <button className={`dugme min-h-9 px-3 py-1 text-xs ${k.kaydedildi ? "dugme-yesil" : "dugme-altin"}`} onClick={() => vm.arsivle(k.id)} disabled={k.kaydedildi}>
                     {k.kaydedildi ? "✓ Arşive kaydedildi" : "Arşive kaydet"}
                   </button>
@@ -193,6 +227,7 @@ export function KameraEkrani() {
             ))}
           </ul>
         )}
+        {kopyalamaHatasi && <p className="text-uyari mt-1 text-xs" role="status">{kopyalamaHatasi}</p>}
       </section>
     </div>
   );

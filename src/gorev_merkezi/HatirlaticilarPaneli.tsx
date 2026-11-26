@@ -5,7 +5,18 @@ import { hatirlaticiDeposu } from "@/veri/depo/HatirlaticiDeposu";
 import { tarihSaat } from "@/ortak/yardimci/yardimcilar";
 import { HataKutusu } from "@/ortak/hata/HataKutusu";
 import type { UygulamaHatasi } from "@/veri/model/tipler";
-import { alarmUygulamasiniAc, bildirimDurumu, hatirlaticiOlustur, hatirlaticiSil, sureyiMsYap, type BildirimDurumu } from "./HatirlaticiYoneticisi";
+import {
+  alarmUygulamasiniAc,
+  bildirimDurumu,
+  bildirimDurumunuTazele,
+  kesinAlarmAyariniAc,
+  kesinAlarmIzniVarMi,
+  hatirlaticiOlustur,
+  hatirlaticiSil,
+  sureyiMsYap,
+  type BildirimDurumu,
+} from "./HatirlaticiYoneticisi";
+import { androidCapinda } from "@/yerel_android/AkrepNative";
 
 function kalanMetin(ms: number): string {
   if (ms <= 0) return "şimdi";
@@ -28,11 +39,29 @@ export function HatirlaticilarPaneli() {
   const [hata, setHata] = useState<UygulamaHatasi | null>(null);
   const [bilgi, setBilgi] = useState("");
   const [bildirim, setBildirim] = useState<BildirimDurumu>(() => bildirimDurumu());
+  const [kesinAlarm, setKesinAlarm] = useState<boolean | null>(null);
   const [, tik] = useState(0);
 
   useEffect(() => {
     const z = setInterval(() => tik((n) => n + 1), 15000);
     return () => clearInterval(z);
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+    void Promise.all([bildirimDurumunuTazele(), kesinAlarmIzniVarMi()]).then(([b, k]) => {
+      if (!mounted) return;
+      setBildirim(b);
+      setKesinAlarm(k);
+    }).catch(() => {
+      if (mounted) setHata({
+        kod: "bildirim_durumu_okunamadi",
+        mesaj: "Bildirim izin durumu okunamadı.",
+        oneri: "Android uygulama bildirim ayarlarını kontrol edin.",
+        tekrarDenenebilir: true,
+      });
+    });
+    return () => { mounted = false; };
   }, []);
 
   const olustur = async (hedef: number) => {
@@ -41,8 +70,39 @@ export function HatirlaticilarPaneli() {
     const r = await hatirlaticiOlustur(metin, hedef);
     setBildirim(bildirimDurumu());
     if (!r.basarili) return setHata(r.hata);
+    if (androidCapinda()) {
+      void kesinAlarmIzniVarMi().then(setKesinAlarm).catch(() => setKesinAlarm(false));
+    }
     setMetin("");
     setBilgi(`Hatırlatıcı kuruldu: ${tarihSaat(r.deger.hatirlatici.zaman)}`);
+  };
+
+  const sil = async (id: string) => {
+    setHata(null);
+    try {
+      await hatirlaticiSil(id);
+    } catch {
+      setHata({
+        kod: "hatirlatici_iptal_edilemedi",
+        mesaj: "Hatırlatıcı sistem bildirimlerinden iptal edilemedi.",
+        oneri: "Uygulama bildirim izinlerini kontrol edin ve tekrar deneyin.",
+        tekrarDenenebilir: true,
+      });
+    }
+  };
+
+  const kesinAlarmIzinVer = async () => {
+    setHata(null);
+    try {
+      setKesinAlarm(await kesinAlarmAyariniAc());
+    } catch {
+      setHata({
+        kod: "kesin_alarm_ayari_acilamadi",
+        mesaj: "Kesin alarm ayarı açılamadı.",
+        oneri: "Android uygulama ayarlarından kesin alarm iznini kontrol edin.",
+        tekrarDenenebilir: true,
+      });
+    }
   };
 
   const bekleyen = liste.filter((h) => !h.tamamlandi);
@@ -71,9 +131,17 @@ export function HatirlaticilarPaneli() {
           <b className={bildirim === "izinli" ? "text-enerji-yesil" : "text-uyari"}>
             {{ izinli: "izin verildi", reddedildi: "reddedildi", desteklenmiyor: "bu tarayıcıda desteklenmiyor", sorulmadi: "henüz sorulmadı" }[bildirim]}
           </b>
-          . Web sürümünde hatırlatıcılar <b>uygulama açıkken</b> sesli ve ekranda uyarır; kapalıyken kaçırılanlar yeniden açtığınızda bildirilir.
+          . {androidCapinda()
+            ? "Android'de sistem bildirimi planlanır; kesin alarm izni yoksa pil tasarrufu sırasında gecikebilir."
+            : "Web sürümünde hatırlatıcılar uygulama açıkken uyarır; kapalıyken kaçırılanlar yeniden açtığınızda bildirilir."}
           {bildirim === "reddedildi" && " Bildirimleri tarayıcı site ayarlarından (adres çubuğu kilit simgesi) açabilirsiniz."}
         </p>
+        {androidCapinda() && bildirim === "izinli" && kesinAlarm === false && (
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <p className="text-uyari text-xs">Kesin alarm izni kapalı; bildirim pil tasarrufunda gecikebilir.</p>
+            <button type="button" className="dugme min-h-9 px-3 py-1 text-xs" onClick={() => void kesinAlarmIzinVer()}>Kesin zaman ayarları</button>
+          </div>
+        )}
       </div>
 
       {hata && <HataKutusu hata={hata} kapat={() => setHata(null)} />}
@@ -103,7 +171,7 @@ export function HatirlaticilarPaneli() {
                 <p className="text-sm font-medium break-words">{h.metin}</p>
                 <p className="text-metin2 text-xs">{tarihSaat(h.zaman)} · {kalanMetin(h.zaman - Date.now())}</p>
               </div>
-              <button className="dugme dugme-kirmizi min-h-9 shrink-0 px-3 py-1 text-xs" onClick={() => hatirlaticiSil(h.id)}>İptal</button>
+              <button className="dugme dugme-kirmizi min-h-9 shrink-0 px-3 py-1 text-xs" onClick={() => void sil(h.id)}>İptal</button>
             </li>
           ))}
         </ul>
@@ -115,7 +183,7 @@ export function HatirlaticilarPaneli() {
             {biten.slice(-8).reverse().map((h) => (
               <li key={h.id} className="cam-ince flex items-center justify-between gap-3 p-3 opacity-80">
                 <p className="min-w-0 text-sm break-words">✓ {h.metin} <span className="text-metin2 text-xs">· {tarihSaat(h.zaman)}</span></p>
-                <button className="dugme min-h-9 shrink-0 px-3 py-1 text-xs" onClick={() => hatirlaticiSil(h.id)}>Sil</button>
+                <button className="dugme min-h-9 shrink-0 px-3 py-1 text-xs" onClick={() => void sil(h.id)}>Sil</button>
               </li>
             ))}
           </ul>

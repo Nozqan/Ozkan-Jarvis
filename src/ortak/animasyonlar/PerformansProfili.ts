@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { ayarDeposu, useAyarlar } from "@/veri/depo/AyarDeposu";
 
-export type PerformansSeviyesi = "yuksek";
+export type PerformansSeviyesi = "yuksek" | "dusuk";
 
 export interface PerformansAyari {
   seviye: PerformansSeviyesi;
@@ -13,7 +13,7 @@ export interface PerformansAyari {
   hareketAzalt: boolean;
 }
 
-const SIRA: PerformansSeviyesi[] = ["yuksek"];
+const SIRA: PerformansSeviyesi[] = ["yuksek", "dusuk"];
 let calisma: PerformansSeviyesi | null = null;
 const dinleyiciler = new Set<() => void>();
 let dusukFpsSayaci = 0;
@@ -22,10 +22,8 @@ let dusukFpsSayaci = 0;
 export function otomatikSeviye(): PerformansSeviyesi {
   const n = typeof navigator !== "undefined" ? navigator : undefined;
   const cekirdek = n?.hardwareConcurrency ?? 4;
-  const bellek = (n as unknown as { deviceMemory?: number } | undefined)?.deviceMemory ?? 4;
-  void cekirdek;
-  void bellek;
-  return "yuksek";
+  const bellek = n && "deviceMemory" in n && typeof n.deviceMemory === "number" ? n.deviceMemory : 4;
+  return cekirdek <= 4 || bellek <= 4 ? "dusuk" : "yuksek";
 }
 
 /** HUD her saniye ölçtüğü FPS değerini bildirir; sürekli düşükse seviye bir kademe düşer. */
@@ -52,6 +50,7 @@ const abone = (d: () => void) => {
 export function profilAyari(seviye: PerformansSeviyesi, hareketAzalt: boolean): PerformansAyari {
   const tablo = {
     yuksek: { parcacik: 1, dpr: 2, maksFps: 120 },
+    dusuk: { parcacik: 0.45, dpr: 1, maksFps: 45 },
   }[seviye];
   return { seviye, ...tablo, hareketAzalt };
 }

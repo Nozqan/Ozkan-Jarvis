@@ -36,7 +36,8 @@ const SAYI_KELIMELERI: Record<string, number> = {
 const YARDIM_METNI =
   "Çevrimdışı şunları yapabilirim: feneri aç veya kapat, batarya, depolama, bellek ve ağ durumunu söylemek, sistem durumu raporu, " +
   "not al, son notu göster, notlarımı listele, hesaplama yapmak, saat ve tarih söylemek, 10 dakika sonra su iç diye hatırlat, " +
-  "kamerayı, görev merkezini veya ayarları açmak.";
+  "kamerayı, görev merkezini veya ayarları açmak. Çevrimiçiyken ve Ayarlar'da harici servis izni açıksa “Ankara hava durumu” " +
+  "veya “İnternetten ara güneş sistemi” komutlarını da kullanabilirsiniz.";
 
 export class YerelKomutMotoru {
   constructor(private baglam: KomutBaglami) {}

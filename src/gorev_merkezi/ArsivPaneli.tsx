@@ -11,6 +11,7 @@ const TURLER: { id: ArsivTuru | "hepsi"; ad: string }[] = [
   { id: "nesne", ad: "Nesne" },
   { id: "ortam", ad: "Ortam" },
   { id: "jest", ad: "Jest" },
+  { id: "kod", ad: "QR / barkod" },
 ];
 
 export function ArsivPaneli() {

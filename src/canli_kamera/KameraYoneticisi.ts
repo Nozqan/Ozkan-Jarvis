@@ -3,7 +3,7 @@ import { basarili, basarisiz, cihazHatasiniCevir, hata } from "@/ortak/hata/hata
 import type { Sonuc } from "@/veri/model/tipler";
 import { cihazDurumuBildir } from "@/sistem_izleyici/CihazDurumu";
 
-export type KameraDurumu = "kapali" | "izin_bekleniyor" | "hazirlaniyor" | "hazir" | "metin_analiz" | "nesne_analiz" | "sonuc_hazir" | "basarisiz";
+export type KameraDurumu = "kapali" | "izin_bekleniyor" | "hazirlaniyor" | "hazir" | "metin_analiz" | "nesne_analiz" | "kod_analiz" | "sonuc_hazir" | "basarisiz";
 
 export const KAMERA_ETIKETLERI: Record<KameraDurumu, string> = {
   kapali: "Kamera kapalı",
@@ -12,6 +12,7 @@ export const KAMERA_ETIKETLERI: Record<KameraDurumu, string> = {
   hazir: "Tarama hazır",
   metin_analiz: "Metin analiz ediliyor",
   nesne_analiz: "Nesne analiz ediliyor",
+  kod_analiz: "QR/barkod analiz ediliyor",
   sonuc_hazir: "Sonuç hazır",
   basarisiz: "İşlem başarısız",
 };

@@ -61,7 +61,9 @@ function Uygulama() {
       setUyari({ h, kacirildi });
       duyur(`${kacirildi ? "Kaçırılan hatırlatıcı" : "Hatırlatıcı"}: ${h.metin}`);
     });
-    hatirlaticilariKur();
+    void hatirlaticilariKur().catch(() => {
+      duyur("Android hatırlatıcı bildirimleri yeniden kurulamadı. Bildirim izinlerini ayarlardan kontrol edin.");
+    });
     return () => hatirlaticiDinleyiciAyarla(null);
   }, [duyur]);
 

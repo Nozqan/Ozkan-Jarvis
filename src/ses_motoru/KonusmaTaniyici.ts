@@ -13,6 +13,7 @@ interface TanimaNesnesi {
   continuous: boolean;
   interimResults: boolean;
   maxAlternatives: number;
+  processLocally?: boolean;
   onresult: ((e: TanimaOlayi) => void) | null;
   onerror: ((e: { error: string }) => void) | null;
   onend: (() => void) | null;
@@ -65,13 +66,24 @@ export class KonusmaTaniyici {
     this.duraklatildi = false;
     this.yenidenSayac = [];
     this.gc.dinlemeDurumu(true);
-    this.baslatTanima(K);
-    return true;
+    return this.baslatTanima(K);
   }
 
-  private baslatTanima(K: TanimaKurucu): void {
-    if (this.calisiyor) return;
+  private baslatTanima(K: TanimaKurucu): boolean {
+    if (this.calisiyor) return true;
     const t = new K();
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      if (!("processLocally" in t)) {
+        this.istenen = false;
+        this.gc.dinlemeDurumu(false);
+        this.gc.hata(
+          hata("cevrimdisi_konusma_yok", "Bu tarayıcı çevrimdışı konuşma tanımayı desteklemiyor.", "İnternet bağlantısı kurun veya komutu metin kutusuna yazın.", false),
+          true,
+        );
+        return false;
+      }
+      t.processLocally = true;
+    }
     t.lang = "tr-TR";
     t.continuous = true;
     t.interimResults = true;
@@ -117,7 +129,12 @@ export class KonusmaTaniyici {
           break;
         case "language-not-supported":
           this.istenen = false;
-          this.gc.hata(hata("dil_yok", "Türkçe konuşma tanıma bu cihazda desteklenmiyor.", "Komutları metin kutusuna yazabilirsiniz.", false), true);
+          this.gc.hata(
+            hata("dil_yok", "Bu cihazda Türkçe konuşma tanıma kullanılamıyor.", navigator.onLine
+              ? "Komutları metin kutusuna yazabilirsiniz."
+              : "Çevrimdışı Türkçe dil paketi yüklü olmayabilir. İnternet bağlantısı kurun veya komutu metinle girin.", false),
+            true,
+          );
           break;
         default:
           this.gc.hata(hata("konusma_hata", "Konuşma anlaşılamadı.", "Tekrar deneyin veya komutu metinle girin.", true), false);
@@ -149,8 +166,16 @@ export class KonusmaTaniyici {
       t.start();
       this.tanima = t;
       this.calisiyor = true;
+      return true;
     } catch {
       this.calisiyor = false;
+      this.istenen = false;
+      this.gc.dinlemeDurumu(false);
+      this.gc.hata(
+        hata("konusma_baslatilamadi", "Konuşma tanıma başlatılamadı.", "Mikrofon iznini kontrol edip tekrar deneyin veya komutu metinle girin.", true),
+        true,
+      );
+      return false;
     }
   }
 

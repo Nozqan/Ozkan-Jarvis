@@ -46,7 +46,7 @@ export function BataryaKarti({ d, className = "" }: { d: SistemDurumu; className
           {yuzde == null ? KULLANILAMIYOR : `%${yuzde}`}
         </p>
         <Cubuk oran={yuzde == null ? null : yuzde / 100} renk={renk} />
-        <div className="mt-2 space-y-0.5">
+        <div className="hud-card-extra mt-2 space-y-0.5">
           <Satir e="Şarj" d={b.sarjOluyor == null ? KULLANILAMIYOR : b.sarjOluyor ? "Şarj oluyor ⚡" : "Şarj olmuyor"} />
           <Satir e="Sıcaklık" d={b.sicaklikC == null ? KULLANILAMIYOR : `${b.sicaklikC} °C`} />
         </div>
@@ -66,12 +66,12 @@ export function DepolamaKarti({ d, className = "" }: { d: SistemDurumu; classNam
           {s.desteklenir ? `${bayt(s.kullanilan)} / ${bayt(s.toplam)}` : KULLANILAMIYOR}
         </p>
         <Cubuk oran={oran ?? 0} renk="#67C7FF" />
-        <div className="mt-2 space-y-0.5">
+        <div className="hud-card-extra mt-2 space-y-0.5">
           <Satir e="Boş alan" d={bayt(s.bos)} />
           <Satir e="Uygulama belleği" d={m.uygulamaKullanilan != null ? bayt(m.uygulamaKullanilan) : KULLANILAMIYOR} />
           <Satir e="Cihaz RAM'i" d={m.cihazGB != null ? `≈ ${m.cihazGB} GB` : KULLANILAMIYOR} />
         </div>
-        <p className="text-metin2 mt-1.5 text-[0.65rem] leading-tight">Cihazın dahili depolaması.</p>
+        <p className="hud-card-extra text-metin2 mt-1.5 text-[0.65rem] leading-tight">Cihazın dahili depolaması.</p>
       </Kart>
     </div>
   );
@@ -85,7 +85,7 @@ export function AgKarti({ d, className = "" }: { d: SistemDurumu; className?: st
         <p className="mt-1 text-lg font-bold" style={{ color: a.cevrimici ? "#54E38E" : "#FF5E6C" }}>
           {a.cevrimici ? "Çevrimiçi" : "Çevrimdışı"}
         </p>
-        <div className="mt-1.5 space-y-0.5">
+        <div className="hud-card-extra mt-1.5 space-y-0.5">
           <Satir e="Tür" d={a.tur ? (TUR_ADI[a.tur] ?? a.tur) : a.etkinTur ? a.etkinTur.toUpperCase() : KULLANILAMIYOR} />
           <Satir e="Yaklaşık hız" d={a.indirmeMbps != null ? `${a.indirmeMbps} Mb/sn` : KULLANILAMIYOR} />
           <Satir e="Gecikme" d={!a.cevrimici ? "—" : d.gecikmeMs != null ? `${d.gecikmeMs} ms` : a.rttMs != null ? `≈ ${a.rttMs} ms` : KULLANILAMIYOR} />
@@ -123,7 +123,7 @@ export function DurumKarti({ className = "" }: { className?: string }) {
   return (
     <div className={className}>
       <Kart baslik="Donanım ve Yapay Zekâ" simge="🛰️">
-        <div className="mt-2 space-y-1.5">
+        <div className="hud-card-status mt-2 space-y-1.5">
           <Durum ad="Mikrofon" durum={DONANIM_RENK[c.mikrofon]} metin={DONANIM_ETIKET[c.mikrofon]} yanip={c.mikrofon === "aktif"} />
           <Durum
             ad="Kamera"

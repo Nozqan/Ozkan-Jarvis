@@ -2,17 +2,13 @@
 
 Geliştirici: **Nebi Özkan**
 
-Türkçe sesli iletişim, canlı kamera taraması, çevrimdışı yerel komutlar ve 3B Güneş HUD arayüzü sunan modüler asistan.
-
-> **Platform notu:** Bu depo, bulunduğu ortamda derlenebilen **web (React + Vite + Tailwind)** sürümüdür.
-> Android (Kotlin / Jetpack Compose) APK’sı değildir. Aynı modül yapısı ve davranışlar, Android sürümüne
-> birebir taşınabilecek şekilde Türkçe klasörlerle ayrılmıştır (bkz. aşağıdaki eşleşme tablosu).
+Türkçe sesli iletişim, canlı kamera taraması, yerel komutlar ve 3B Güneş HUD arayüzü sunan React uygulaması. Capacitor ile web ve Android olarak paketlenir; Android sürümü Kotlin/Jetpack Compose ile yeniden yazılmış bir uygulama değildir.
 
 ## Klasör yapısı (`src/`)
 
 ```
-ortak/        tema, bilesenler, animasyonlar, hata, yardimci
-veri/         model (tipler), depo (Ayar, Not, Arsiv, Sohbet, Hatirlatici)
+ortak/        tema, bileşenler, animasyonlar, hata, yardımcılar
+veri/         model (tipler), depo (Ayar, Not, Arşiv, Sohbet, Hatırlatıcı, şifreli yedekleme)
 giris_ekrani/ GirisEkrani, GirisDurumu, GirisAnimasyonlari
 ana_hud/      AnaHudEkrani, AnaHudViewModel, AkanMetin
 gunes_hud/    GunesHud, EnerjiHalkalari, SesGorsellestirici
@@ -20,38 +16,52 @@ canli_kamera/ KameraEkrani, KameraViewModel, KameraYoneticisi, MetinTarayici (OC
               NesneAnalizcisi, OrtamAnalizcisi, JestAlgilayici, FeneriYoneticisi, KameraHudKatmani
 ses_motoru/   MikrofonYoneticisi, KonusmaTaniyici, TurkceMetinSeslendirici, UyandirmaKelimesi
 yapay_zeka/   YapayZekaSaglayici, OpenAiUyumluSaglayici, GeminiSaglayici, YerelKomutMotoru,
-              YerelKomutSaglayici, KomutYonlendirici, SaglayiciFabrikasi, YapayZekaDurumu
+              YerelKomutSaglayici, CanliBilgi, KomutYonlendirici, SaglayiciFabrikasi
 sistem_izleyici/ SistemIzleyici, Batarya/Depolama/Bellek/AgIzleyici, CihazDurumu, SistemPaneli
-gorev_merkezi/ NotYoneticisi, HatirlaticiYoneticisi, HesapMakinesi + paneller
+gorev_merkezi/ NotYoneticisi, HatirlaticiYoneticisi, HesapMakinesi + görev panelleri
 ayarlar/      AyarlarEkrani, GizlilikEkrani, GuvenliAnahtarDeposu
 gezinme/      Gezinme, GezinmeTipleri
-testler/      Birim, izin akışı, OCR arşiv ve çevrimdışı mod testleri (vitest)
+testler/      Birim, izin akışı, yedekleme, tarama, konuşma ve çevrimdışı mod testleri (vitest)
 ```
 
 ## Android ↔ Web eşleşmesi
 
-| Android                         | Bu sürüm                                           |
-|---------------------------------|----------------------------------------------------|
-| CameraX                         | `getUserMedia` (KameraYoneticisi)                  |
-| ML Kit OCR                      | Tesseract (WASM, `tur` dili, cihazda)              |
-| ML Kit nesne / el modeli        | COCO‑SSD (TF.js) / MediaPipe Gesture Recognizer    |
-| SpeechRecognizer                | Web Speech API (`tr-TR`)                           |
-| TextToSpeech                    | `speechSynthesis` (tr‑TR en iyi ses seçimi)        |
-| Android Keystore                | WebCrypto AES‑GCM + çıkarılamaz anahtar (IndexedDB) |
-| DataStore                       | `kaliciDepo` (localStorage)                        |
-| WorkManager / AlarmManager      | Uygulama açıkken zamanlayıcı + Android alarm intent |
+| Özellik                         | Web                                               | Android (Capacitor) |
+|---------------------------------|---------------------------------------------------|---------------------|
+| Kamera                          | `getUserMedia` (`KameraYoneticisi`)               | WebView kamera izni |
+| QR / barkod                     | Yerel `BarcodeDetector` destekleniyorsa           | WebView desteğine bağlı |
+| OCR / nesne / jest              | Tesseract / COCO‑SSD / MediaPipe (cihazda)        | Aynı web modülleri |
+| Konuşma tanıma                  | Web Speech API (`tr-TR`); tarayıcı desteklerse çevrimdışı tanıma | WebView motoru ve dil paketi desteğine bağlı |
+| Sesli yanıt                     | `speechSynthesis`                                 | WebView TTS desteği |
+| Hatırlatıcı bildirimi           | Uygulama açıkken zamanlayıcı                      | Capacitor Local Notifications |
+| Şifreli yedek                   | PBKDF2-SHA-256 + AES-GCM; API anahtarları hariç   | Aynı web modülü |
 
-## Komutlar
+## Geliştirme ve derleme
+
+Gereksinimler: Node.js 24, npm; Android APK için ayrıca JDK 21 ve Android SDK Platform 36 / Build Tools 36.0.0.
 
 ```
-npm run build        # dist/index.html üretir
-npx vitest run       # birim testleri
+npm ci
+npm run test          # Birim ve davranış testleri
+npm run typecheck     # TypeScript tür denetimi
+npm run build         # Web uygulamasını dist/index.html olarak derler
+npm run android:apk   # Capacitor senkronizasyonu + Android debug APK
 ```
 
-## Bilinen platform sınırları (dürüst liste)
+Android SDK konumu `ANDROID_HOME` veya `ANDROID_SDK_ROOT` ile belirtilmelidir. `.github/workflows/android-apk.yml`, testleri çalıştırır ve debug APK’yı GitHub Actions artifact’i olarak saklar. Bu APK geliştirme/test içindir; imzalı mağaza sürümü değildir. Release imzalama anahtarları ve dağıtım süreci henüz yapılandırılmamıştır.
+
+## Canlı bilgi ve gizlilik
+
+- Hava durumu, açıkça şehir belirtilerek sorulabilir (ör. “Ankara hava durumu”); arama için “İnternetten ara …” biçimini kullanın. Canlı servis çağrıları için Ayarlar’daki harici servis izni gerekir.
+- Hava durumu Open-Meteo’dan, arama sonuçları Türkçe Wikipedia’dan alınır. Bu servisler yalnızca şehir/sorgu bilgisini alır; fotoğraf, kamera görüntüsü, mikrofon kaydı, not ve arşiv gönderilmez.
+- Harici yapay zekâ sağlayıcısına çözülemeyen komut metni ancak sağlayıcı yapılandırılmış ve harici servis izni açıksa gönderilir.
+- Yedek parola ile şifrelenir. API anahtarları güvenlik nedeniyle yedeğe dahil edilmez. Geri yükleme yerel uygulama verilerinin üzerine yazar.
+
+## Platform sınırları
 
 - Web’de batarya **sıcaklığı** ve cihazın **toplam disk** bilgisi okunamaz → “Kullanılamıyor” gösterilir.
 - Fener yalnızca arka kamerada `torch` destekleyen Android/Chrome cihazlarda çalışır.
-- Arka planda sürekli mikrofon ve kapalıyken hatırlatıcı/alarm tetikleme web’de mümkün değildir.
-- Konuşma tanıma Chrome/Edge’de çevrimiçi servis kullanır (Gizlilik ekranında belirtilmiştir).
+- Web’de arka planda sürekli mikrofon dinleme mümkün değildir. Web hatırlatıcıları uygulama açıkken çalışır; Android sistem bildirimleri izin ve işletim sistemi kısıtlarına bağlıdır.
+- Web Speech konuşmayı tarayıcı servisine gönderebilir. Tarayıcı `processLocally` desteği sağlıyor ve Türkçe dil paketi kuruluysa çevrimdışı dinleme kullanılabilir; aksi halde kullanıcıya metin girişi önerilir.
+- QR/barkod tanıma tarayıcının `BarcodeDetector` desteğine bağlıdır; desteklenmeyen cihazda özellik kullanılamaz.
 - OCR, nesne ve jest modelleri ilk kullanımda CDN’den indirilir; sonra önbellekten çalışır.

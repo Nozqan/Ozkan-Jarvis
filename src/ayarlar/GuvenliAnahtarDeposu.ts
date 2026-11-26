@@ -39,19 +39,23 @@ function dbAc(): Promise<IDBDatabase> {
 
 async function anaAnahtariAl(): Promise<CryptoKey> {
   const db = await dbAc();
-  const mevcut = await new Promise<CryptoKey | undefined>((coz, reddet) => {
-    const r = db.transaction(TABLO).objectStore(TABLO).get(ANA_ANAHTAR);
-    r.onsuccess = () => coz(r.result as CryptoKey | undefined);
-    r.onerror = () => reddet(r.error);
-  });
-  if (mevcut) return mevcut;
-  const yeni = await crypto.subtle.generateKey({ name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
-  await new Promise<void>((coz, reddet) => {
-    const r = db.transaction(TABLO, "readwrite").objectStore(TABLO).put(yeni, ANA_ANAHTAR);
-    r.onsuccess = () => coz();
-    r.onerror = () => reddet(r.error);
-  });
-  return yeni;
+  try {
+    const mevcut = await new Promise<CryptoKey | undefined>((coz, reddet) => {
+      const r = db.transaction(TABLO).objectStore(TABLO).get(ANA_ANAHTAR);
+      r.onsuccess = () => coz(r.result as CryptoKey | undefined);
+      r.onerror = () => reddet(r.error);
+    });
+    if (mevcut) return mevcut;
+    const yeni = await crypto.subtle.generateKey({ name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
+    await new Promise<void>((coz, reddet) => {
+      const r = db.transaction(TABLO, "readwrite").objectStore(TABLO).put(yeni, ANA_ANAHTAR);
+      r.onsuccess = () => coz();
+      r.onerror = () => reddet(r.error);
+    });
+    return yeni;
+  } finally {
+    db.close();
+  }
 }
 
 const b64 = (b: ArrayBuffer | Uint8Array) => {
@@ -109,6 +113,20 @@ export async function anahtarSil(saglayici: string): Promise<void> {
   oturumBellegi.delete(saglayici);
   sil(kayitAdi(saglayici));
   surum.ata((n) => n + 1);
+}
+
+export async function guvenliAnahtarlariTemizle(): Promise<void> {
+  oturumBellegi.clear();
+  sil(kayitAdi("openai"));
+  sil(kayitAdi("gemini"));
+  surum.ata((n) => n + 1);
+  if (typeof indexedDB === "undefined") return;
+  await new Promise<void>((coz, reddet) => {
+    const istek = indexedDB.deleteDatabase(VERITABANI);
+    istek.onsuccess = () => coz();
+    istek.onerror = () => reddet(new Error("Şifreleme anahtarı güvenli depodan silinemedi."));
+    istek.onblocked = () => reddet(new Error("Güvenli depo açık kaldı. Uygulamayı kapatıp tekrar deneyin."));
+  });
 }
 
 /** Ekranda her zaman maskeli gösterim; gerçek anahtar arayüze verilmez. */

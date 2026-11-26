@@ -47,7 +47,7 @@ export interface Hatirlatici {
   tamamlandi: boolean;
 }
 
-export type ArsivTuru = "ocr" | "nesne" | "ortam" | "jest";
+export type ArsivTuru = "ocr" | "nesne" | "ortam" | "jest" | "kod";
 
 export interface ArsivKaydi {
   id: string;

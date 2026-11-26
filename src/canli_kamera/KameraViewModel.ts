@@ -9,6 +9,7 @@ import { metinOku, metinTarayiciKapat } from "./MetinTarayici";
 import { nesneleriTani } from "./NesneAnalizcisi";
 import { ortamiAnalizEt, parlaklikOlc } from "./OrtamAnalizcisi";
 import { jestAlgila, jestHazirla, jestKapat } from "./JestAlgilayici";
+import { kodlariTani } from "./KodTarayici";
 
 export interface TaramaKarti {
   id: string;
@@ -208,6 +209,33 @@ export function useKameraViewModel() {
     setDurum("sonuc_hazir");
   }, [meşgul, kareAl, kilitleriGoster, kartEkle, gunlukEkle, islemBasarisiz]);
 
+  const kodTaniEylemi = useCallback(async () => {
+    if (meşgul) return;
+    const kare = kareAl();
+    if (!kare) return;
+    setMeşgul(true);
+    setHata(null);
+    setDurum("kod_analiz");
+    gunlukEkle("QR/barkod analizi başladı");
+    const r = await kodlariTani(kare);
+    setMeşgul(false);
+    if (!r.basarili) return islemBasarisiz(r.hata);
+    const bulunan = r.deger;
+    if (!bulunan.length) {
+      kartEkle("kod", "QR/barkod bulunamadı", "Kodu kadraja alıp kameraya yaklaştırarak tekrar deneyin.");
+      gunlukEkle("Karede QR/barkod bulunamadı");
+      setDurum("sonuc_hazir");
+      return;
+    }
+    const oran = (videoRef.current?.videoWidth ?? kare.width) / kare.width;
+    kilitleriGoster(bulunan.flatMap((kod) => kod.kutu
+      ? [{ x: kod.kutu.x * oran, y: kod.kutu.y * oran, w: kod.kutu.w * oran, h: kod.kutu.h * oran, etiket: kod.bicim.toUpperCase(), renk: "#67C7FF" }]
+      : []));
+    kartEkle("kod", `${bulunan.length} QR/barkod bulundu`, bulunan.map((kod, i) => `${i + 1}. ${kod.bicim.toUpperCase()}: ${kod.metin}`).join("\n"));
+    gunlukEkle(`${bulunan.length} QR/barkod bulundu`);
+    setDurum("sonuc_hazir");
+  }, [meşgul, kareAl, kilitleriGoster, kartEkle, gunlukEkle, islemBasarisiz]);
+
   const ortamAnalizEylemi = useCallback(() => {
     const kare = kareAl();
     if (!kare) return;
@@ -307,6 +335,7 @@ export function useKameraViewModel() {
     cevir,
     metinOku: metinOkuEylemi,
     nesneTani: nesneTaniEylemi,
+    kodTani: kodTaniEylemi,
     ortamAnaliz: ortamAnalizEylemi,
     jestDegistir,
     arsivle: arsivleEylemi,

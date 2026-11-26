@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
     "preview": "vite preview",
     "android:sync": "npm run build && cap sync android",
     "android:apk": "npm run android:sync && cd android && ./gradlew assembleDebug"
@@ -14,6 +16,7 @@
     "@capacitor/android": "^8.6.3",
     "@capacitor/cli": "^8.6.3",
     "@capacitor/core": "^8.6.3",
+    "@capacitor/local-notifications": "^8.3.1",
     "clsx": "2.1.1",
     "react": "19.2.6",
     "react-dom": "19.2.6",

@@ -1,22 +1,74 @@
-// Hatırlatıcılar. Web sınırı: uygulama (sekme) açıkken tetiklenir; kapalıyken tarayıcı zamanlayıcı çalıştıramaz.
-// Bu nedenle uygulama yeniden açıldığında kaçırılan hatırlatıcılar da bildirilir.
-// Bildirim izni yalnızca hatırlatıcı oluşturulurken (ihtiyaç anında) istenir.
+// Web hatırlatıcıları uygulama açıkken işler; Android bildirimleri uygulama kapalıyken de tetiklenebilir.
+// Bildirim izni yalnızca kullanıcı hatırlatıcı oluştururken istenir.
 import { yeniKimlik } from "@/ortak/yardimci/yardimcilar";
 import { basarili, basarisiz, hata } from "@/ortak/hata/hataYardimcilari";
 import { hatirlaticiDeposu } from "@/veri/depo/HatirlaticiDeposu";
 import type { Hatirlatici, Sonuc } from "@/veri/model/tipler";
+import { LocalNotifications } from "@capacitor/local-notifications";
+import { androidCapinda } from "@/yerel_android/AkrepNative";
 
 export type BildirimDurumu = "izinli" | "reddedildi" | "desteklenmiyor" | "sorulmadi";
 
 const zamanlayicilar = new Map<string, ReturnType<typeof setTimeout>>();
 const EN_FAZLA = 2_000_000_000; // setTimeout üst sınırına yakın güvenli değer
 let tetikleyici: ((h: Hatirlatici, kacirildi: boolean) => void) | null = null;
+let androidIzin: BildirimDurumu = "sorulmadi";
+
+function bildirimKimligi(id: string): number {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) hash = Math.imul(hash, 31) + id.charCodeAt(i) | 0;
+  return (hash & 0x7fffffff) || 1;
+}
+
+function nativeDurum(display: string): BildirimDurumu {
+  if (display === "granted") return "izinli";
+  if (display === "denied") return "reddedildi";
+  return "sorulmadi";
+}
+
+async function nativeIzinKontrolu(): Promise<BildirimDurumu> {
+  if (!androidCapinda()) return bildirimDurumu();
+  const izin = await LocalNotifications.checkPermissions();
+  androidIzin = nativeDurum(izin.display);
+  return androidIzin;
+}
+
+export async function bildirimDurumunuTazele(): Promise<BildirimDurumu> {
+  return nativeIzinKontrolu();
+}
+
+export async function kesinAlarmIzniVarMi(): Promise<boolean | null> {
+  if (!androidCapinda()) return null;
+  const izin = await LocalNotifications.checkExactNotificationSetting();
+  return izin.exact_alarm === "granted";
+}
+
+export async function kesinAlarmAyariniAc(): Promise<boolean> {
+  if (!androidCapinda()) return false;
+  const izin = await LocalNotifications.changeExactNotificationSetting();
+  return izin.exact_alarm === "granted";
+}
+
+async function nativeBildirimPlanla(h: Hatirlatici): Promise<void> {
+  if (!androidCapinda() || (await nativeIzinKontrolu()) !== "izinli") return;
+  const exact = await LocalNotifications.checkExactNotificationSetting();
+  await LocalNotifications.schedule({
+    notifications: [{
+      id: bildirimKimligi(h.id),
+      title: "AKREP JARVIS hatırlatıcı",
+      body: h.metin,
+      schedule: { at: new Date(h.zaman), allowWhileIdle: false },
+      isExactNotification: exact.exact_alarm === "granted",
+    }],
+  });
+}
 
 export function hatirlaticiDinleyiciAyarla(f: ((h: Hatirlatici, kacirildi: boolean) => void) | null): void {
   tetikleyici = f;
 }
 
 export function bildirimDurumu(): BildirimDurumu {
+  if (androidCapinda()) return androidIzin;
   if (typeof Notification === "undefined") return "desteklenmiyor";
   if (Notification.permission === "granted") return "izinli";
   if (Notification.permission === "denied") return "reddedildi";
@@ -24,13 +76,14 @@ export function bildirimDurumu(): BildirimDurumu {
 }
 
 export async function bildirimIzniIste(): Promise<BildirimDurumu> {
+  if (androidCapinda()) {
+    const izin = await LocalNotifications.requestPermissions();
+    androidIzin = nativeDurum(izin.display);
+    return androidIzin;
+  }
   if (typeof Notification === "undefined") return "desteklenmiyor";
   if (Notification.permission === "default") {
-    try {
-      await Notification.requestPermission();
-    } catch {
-      /* eski tarayıcılar */
-    }
+    await Notification.requestPermission();
   }
   return bildirimDurumu();
 }
@@ -40,7 +93,7 @@ function tetikle(id: string, kacirildi = false): void {
   if (!h || h.tamamlandi) return;
   hatirlaticiDeposu.ata((o) => o.map((x) => (x.id === id ? { ...x, tamamlandi: true } : x)));
   zamanlayicilar.delete(id);
-  if (bildirimDurumu() === "izinli") {
+  if (!androidCapinda() && bildirimDurumu() === "izinli") {
     try {
       new Notification("AKREP JARVIS hatırlatıcı", { body: h.metin, tag: id });
     } catch {
@@ -70,30 +123,55 @@ export async function hatirlaticiOlustur(
   if (!isFinite(zaman) || zaman <= Date.now() + 1000) {
     return basarisiz(hata("hatirlatici_gecmis", "Hatırlatıcı zamanı geçmişte veya çok yakın.", "Gelecekte bir zaman seçin.", false));
   }
-  const bildirim = await bildirimIzniIste();
+  let bildirim: BildirimDurumu;
+  try {
+    bildirim = await bildirimIzniIste();
+  } catch {
+    return basarisiz(hata("bildirim_izin_hatasi", "Bildirim izni kontrol edilemedi.", "Uygulamanın bildirim izinlerini Android ayarlarından kontrol edin.", true));
+  }
   const h: Hatirlatici = { id: yeniKimlik(), metin: temiz, zaman, tamamlandi: false };
+  try {
+    await nativeBildirimPlanla(h);
+  } catch {
+    return basarisiz(hata("hatirlatici_bildirim_kurulamadi", "Android bildirimi zamanlanamadı.", "Bildirim iznini ve Android ayarlarını kontrol edip tekrar deneyin.", true));
+  }
   hatirlaticiDeposu.ata((o) => [...o, h].sort((a, b) => a.zaman - b.zaman));
   kur(h);
   return basarili({ hatirlatici: h, bildirim });
 }
 
-export function hatirlaticiSil(id: string): void {
+export async function hatirlaticiSil(id: string): Promise<void> {
+  if (androidCapinda()) await LocalNotifications.cancel({ notifications: [{ id: bildirimKimligi(id) }] });
   const t = zamanlayicilar.get(id);
   if (t) clearTimeout(t);
   zamanlayicilar.delete(id);
   hatirlaticiDeposu.ata((o) => o.filter((x) => x.id !== id));
 }
 
+export async function hatirlaticiPlanlariniTemizle(): Promise<void> {
+  const hatirlaticilar = hatirlaticiDeposu.al();
+  if (androidCapinda() && hatirlaticilar.length) {
+    await LocalNotifications.cancel({ notifications: hatirlaticilar.map((h) => ({ id: bildirimKimligi(h.id) })) });
+  }
+  zamanlayicilar.forEach((t) => clearTimeout(t));
+  zamanlayicilar.clear();
+}
+
 /** Uygulama açılışında: bekleyenleri kurar, kaçırılanları bildirir. */
-export function hatirlaticilariKur(): void {
+export async function hatirlaticilariKur(): Promise<void> {
   zamanlayicilar.forEach((t) => clearTimeout(t));
   zamanlayicilar.clear();
   const simdi = Date.now();
+  const gelecekteki: Hatirlatici[] = [];
   hatirlaticiDeposu.al().forEach((h) => {
     if (h.tamamlandi) return;
     if (h.zaman <= simdi) tetikle(h.id, true);
-    else kur(h);
+    else {
+      kur(h);
+      gelecekteki.push(h);
+    }
   });
+  if (androidCapinda()) await Promise.all(gelecekteki.map(nativeBildirimPlanla));
 }
 
 /** Android'de sistem alarm uygulamasını açar (intent). Diğer platformlarda açık bir hata döner. */

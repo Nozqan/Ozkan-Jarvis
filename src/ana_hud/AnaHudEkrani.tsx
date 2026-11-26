@@ -52,8 +52,8 @@ export function AnaHudEkrani({ vm, gezin }: Props) {
   const sesHatasi = vm.hata && /konusma|mikrofon|dil_/.test(vm.hata.kod);
 
   return (
-    <div className="mx-auto h-[calc(100dvh-4.5rem)] max-w-6xl overflow-hidden px-3 pt-14 pb-28 sm:px-6">
-      <header className="mb-3 flex flex-wrap items-center justify-between gap-2">
+    <div className="hud-screen mx-auto h-[100dvh] max-w-6xl overflow-hidden px-3 pt-[max(3.5rem,env(safe-area-inset-top))] pb-[calc(5.5rem+env(safe-area-inset-bottom))] sm:px-6">
+      <header className="hud-header mb-3 flex flex-wrap items-center justify-between gap-2">
         <div className="min-w-0">
           <h1 className="altin-yazi text-xl font-extrabold tracking-[0.12em] sm:text-2xl">AKREP JARVIS</h1>
           <p className="text-metin2 text-xs">Geliştirici: Nebi Özkan</p>
@@ -63,11 +63,11 @@ export function AnaHudEkrani({ vm, gezin }: Props) {
         </div>
       </header>
 
-      <div className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)_minmax(0,1fr)] lg:grid-rows-2">
-        <BataryaKarti d={sistem} className="order-1 lg:order-none lg:col-start-1 lg:row-start-1" />
-        <AgKarti d={sistem} className="order-2 lg:order-none lg:col-start-3 lg:row-start-1" />
+      <div className="hud-durum-grid grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)_minmax(0,1fr)] lg:grid-rows-2">
+        <BataryaKarti d={sistem} className="hud-card order-1 lg:order-none lg:col-start-1 lg:row-start-1" />
+        <AgKarti d={sistem} className="hud-card order-2 lg:order-none lg:col-start-3 lg:row-start-1" />
 
-        <div className="order-3 col-span-2 flex flex-col items-center lg:order-none lg:col-span-1 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:justify-center">
+        <div className="hud-center order-3 col-span-2 flex flex-col items-center lg:order-none lg:col-span-1 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:justify-center">
           <div className="aspect-square w-full max-w-[min(100%,460px)] sm:max-w-[460px]">
             <GunesHud durum={vm.hudDurumu} />
           </div>
@@ -85,13 +85,13 @@ export function AnaHudEkrani({ vm, gezin }: Props) {
           )}
         </div>
 
-        <DepolamaKarti d={sistem} className="order-4 lg:order-none lg:col-start-1 lg:row-start-2" />
-        <DurumKarti className="order-5 lg:order-none lg:col-start-3 lg:row-start-2" />
+        <DepolamaKarti d={sistem} className="hud-card order-4 lg:order-none lg:col-start-1 lg:row-start-2" />
+        <DurumKarti className="hud-card order-5 lg:order-none lg:col-start-3 lg:row-start-2" />
       </div>
 
       {/* Komut paneli */}
-      <section className="cam mt-4 p-3 sm:p-5" aria-label="Komut paneli">
-        <div className="min-h-[3.5rem]">
+      <section className="hud-command cam mt-4 p-3 sm:p-5" aria-label="Komut paneli">
+        <div className="hud-command-message min-h-[3.5rem]">
           {vm.araMetin ? (
             <p className="text-enerji-yesil text-base italic break-words" aria-live="polite">
               🎙 {vm.araMetin}…
@@ -150,23 +150,11 @@ export function AnaHudEkrani({ vm, gezin }: Props) {
               Sesi sustur
             </button>
           )}
+          <button type="button" className="dugme dugme-altin" onClick={() => gezin("kamera")}>📷 Kamera</button>
         </form>
 
-        <div className="mt-3 grid grid-cols-2 gap-2" role="group" aria-label="Ana eylemler">
-          <button
-            type="button"
-            onClick={() => void vm.dinlemeDegistir()}
-            className={`dugme w-full ${vm.dinliyor ? "dugme-kirmizi" : "dugme-yesil"}`}
-            aria-pressed={vm.dinliyor}
-          >
-            <span aria-hidden="true">{vm.dinliyor ? "⏹" : "🎙"}</span>
-            {vm.dinliyor ? "Dinlemeyi durdur" : "Dinlemeyi başlat"}
-          </button>
-          <button className="dugme w-full dugme-altin" onClick={() => gezin("kamera")}>📷 Kamera</button>
-        </div>
-
         {vm.mesajlar.length > 0 && (
-          <details className="mt-3">
+          <details className="hud-history mt-3">
             <summary className="text-metin2 inline-block cursor-pointer rounded-full px-3 py-1 text-xs hover:text-gunes">Konuşma geçmişi ({vm.mesajlar.length})</summary>
             <div ref={sonRef} className="mt-2 max-h-64 space-y-2 overflow-y-auto pr-1">
               {vm.mesajlar.map((m) => (
